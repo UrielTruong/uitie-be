@@ -3,7 +3,7 @@
 - install composer
 - run cmd
 	+ brew install autoconf automake libtool
-	+brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
+	+ brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
 	+ brew install msodbcsql18 mssql-tools18
 	+ sudo CXXFLAGS="-I/opt/homebrew/opt/unixodbc/include/" LDFLAGS="-L/opt/homebrew/lib/" pecl install sqlsrv
 	+ sudo CXXFLAGS="-I/opt/homebrew/opt/unixodbc/include/" LDFLAGS="-L/opt/homebrew/lib/" pecl install pdo_sqlsrv
