@@ -2,58 +2,66 @@
 
 namespace App\Models;
 
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Builder;
 
-/**
- * @property int $id
- * @property string $name
- * @property string $email
- * @property \Illuminate\Support\Carbon|null $email_verified_at
- * @property string $password
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- */
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
-
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
+     * Không cần $primaryKey nữa vì mặc định đã là 'id'
      */
+
+    // Constants để quản lý dữ liệu nhất quán
+    const ROLE_SUPER_ADMIN = 'Super Admin';
+    const ROLE_ADMIN       = 'Admin';
+    const ROLE_STUDENT     = 'Student';
+
+    const STATUS_INACTIVE  = 'Inactive';
+    const STATUS_ACTIVE    = 'Active';
+    const STATUS_LOCKED    = 'Locked';
+
     protected $fillable = [
-        'name',
         'email',
         'password',
-        'age'
+        'full_name',
+        'mssv',
+        'phone_number',
+        'role',
+        'status',
+        'status_reason',
+        'faculty',
+        'class_name',
+        'academic_year',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    // =========================================================================
+    // SCOPES
+    // =========================================================================
+
+    public function scopeActive(Builder $query): void
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-        ];
+        $query->where('status', self::STATUS_ACTIVE);
+    }
+
+    // =========================================================================
+    // HELPERS
+    // =========================================================================
+
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN]);
     }
 }
-
