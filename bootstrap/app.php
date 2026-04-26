@@ -12,7 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Đăng ký bí danh 'admin', sau này khi viết Route, mn chỉ cần gõ chữ 'admin' là Laravel tự hiểu phải chạy lớp bảo vệ này để kiểm tra xem user có phải là Admin hay Super Admin hay không.
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\CheckAdminRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
