@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\UserController;
 Route::post('login', [AuthenticatedController::class, 'login'])
     ->name('login');
 
+//reset password
+Route::post('reset-password', [UserController::class, 'resetPassword']);
+
 Route::middleware('auth.jwt')->group(function () {
     Route::get('test', function (Request $request) {
         return response()->json([

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\ChangePasswordRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\ResetPasswordRequest;
 
 class UserController extends Controller
 {
@@ -92,5 +93,36 @@ class UserController extends Controller
                 'message' => 'Failed to change password',
             ], 500);
         }
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $email = $request->email;
+
+        $user = $this->users->findByEmail($email);
+
+        if (! $user) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        //reset to default password
+        try {
+            $user->password = Hash::make('12345678');
+            $user->updated_at = now();
+            $user->save();
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to reset password',
+            ], 500);
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Password reset successfully',
+        ]);
     }
 }
