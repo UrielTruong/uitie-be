@@ -9,6 +9,9 @@ use App\Http\Resources\UserCollection;
 use App\Http\Resources\UserResource;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Http\Request;
+use App\Http\Requests\ChangePasswordRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -43,5 +46,51 @@ class UserController extends Controller
         $user = $this->users->create($request->validated());
 
         return new UserResource($user);
+    }
+
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $userId = $request->user_id;
+        $currentPassword = $request->current_password;
+        $newPassword = $request->new_password;
+
+        $user = $this->users->findById($userId);
+
+        if (! $user) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        if (! Hash::check($currentPassword, $user->password)) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Current password is incorrect',
+            ], 400);
+        }
+
+        if (Hash::check($newPassword, $user->password)) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'New password cannot be the same as the current password',
+            ], 400);
+        }
+
+        try {
+            $user->password = Hash::make($newPassword);
+            $user->updated_at = now();
+            $user->save();
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Password changed successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to change password',
+            ], 500);
+        }
     }
 }

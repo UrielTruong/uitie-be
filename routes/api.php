@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthenticatedController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\UserController;
 
 Route::post('login', [AuthenticatedController::class, 'login'])
     ->name('login');
@@ -29,5 +30,11 @@ Route::middleware('auth.jwt')->group(function () {
                 'message' => 'Hello World',
             ]);
         });
+    });
+
+    //route for user
+    Route::prefix('user')->group(function () {
+        //change password
+        Route::post('change-password', [UserController::class, 'changePassword']);
     });
 });
