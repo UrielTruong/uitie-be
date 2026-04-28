@@ -15,18 +15,26 @@ class AuthenticatedController extends Controller
 
     public function login(LoginRequest $request): LoginResource|JsonResponse
     {
-        $user = User::where('email', $request->email)->first();
+        try {
+            $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+            if (! $user || ! Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Invalid credentials',
+                    'data'    => null,
+                ], 401);
+            }
+
+            $token = $this->jwtService->encode($user);
+
+            return new LoginResource($user, $token);
+        } catch (\Exception $e) {
             return response()->json([
                 'status'  => false,
                 'message' => 'Invalid credentials',
                 'data'    => null,
             ], 401);
         }
-
-        $token = $this->jwtService->encode($user);
-
-        return new LoginResource($user, $token);
     }
 }
