@@ -40,6 +40,7 @@ Route::middleware('auth.jwt')->group(function () {
         // --------------------------------
     });
 
+    });
     Route::middleware('auth.role:Super Admin')->group(function () {
         Route::get('/super-admin', function () {
             return response()->json([
@@ -58,4 +59,3 @@ Route::middleware('auth.jwt')->group(function () {
         //change password
         Route::post('change-password', [UserController::class, 'changePassword']);
     });
-});
