@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\AuthenticatedController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -39,5 +40,13 @@ Route::middleware('auth.jwt')->group(function () {
     Route::prefix('user')->group(function () {
         //change password
         Route::post('change-password', [UserController::class, 'changePassword']);
+    });
+
+    //route for post
+    Route::prefix('post')->group(function () {
+        Route::get('/', [PostController::class, 'getList']);
+        Route::post('/', [PostController::class, 'create']);
+        Route::put('/{id}', [PostController::class, 'update']);
+        Route::delete('/{id}', [PostController::class, 'destroy']);
     });
 });
