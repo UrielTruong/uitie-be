@@ -8,8 +8,12 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    // =========================================================================
+    // 1. QUẢN LÝ SINH VIÊN (DÀNH CHO ADMIN & SUPER ADMIN)
+    // =========================================================================
+
     /**
-     * 1. Lấy danh sách Sinh viên (Dành cho Admin/Super Admin)
+     * Lấy danh sách Sinh viên
      */
     public function index(Request $request)
     {
@@ -31,23 +35,59 @@ class UserController extends Controller
     }
 
     /**
-     * 2. Khóa hoặc Mở khóa tài khoản (Dành cho Admin/Super Admin)
-     * ĐÃ CẬP NHẬT: Sử dụng reason_key từ Model
+     * Cập nhật thông tin chi tiết của Sinh viên
+     */
+    public function updateStudent(Request $request, $id)
+    {
+        $student = User::where('id', $id)->where('role', User::ROLE_STUDENT)->firstOrFail();
+
+        $request->validate([
+            'full_name'     => 'required|string|max:255',
+            'mssv'          => 'required|string|unique:users,mssv,' . $id,
+            'phone_number'  => 'nullable|string|max:15',
+            'faculty'       => 'nullable|string',
+            'class_name'    => 'nullable|string',
+            'academic_year' => 'nullable|string',
+        ]);
+
+        $student->update($request->only([
+            'full_name', 'mssv', 'phone_number', 'faculty', 'class_name', 'academic_year'
+        ]));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật thông tin sinh viên thành công!',
+            'data'    => $student
+        ]);
+    }
+
+    /**
+     * Xóa tài khoản Sinh viên
+     */
+    public function deleteStudent($id)
+    {
+        $student = User::where('id', $id)->where('role', User::ROLE_STUDENT)->firstOrFail();
+        $student->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã xóa tài khoản sinh viên thành công!'
+        ]);
+    }
+
+    /**
+     * Khóa hoặc Mở khóa tài khoản (Dùng chung cho cả Admin & Student)
      */
     public function updateStatus(Request $request, $id)
     {
-        // Lấy danh sách các KEY hợp lệ (SPAM, VIOLATION,...) để validate
         $validReasons = implode(',', array_keys(User::BLOCK_REASONS));
 
         $request->validate([
             'status' => 'required|in:' . User::STATUS_ACTIVE . ',' . User::STATUS_LOCKED,
-            // Validate: Nếu Locked thì bắt buộc chọn key trong danh sách
             'reason_key' => 'required_if:status,' . User::STATUS_LOCKED . '|in:' . $validReasons,
-            // Nếu chọn "OTHER" thì mới bắt buộc nhập chi tiết
             'other_detail' => 'required_if:reason_key,OTHER|string|nullable' 
         ], [
             'reason_key.required_if' => 'Vui lòng chọn một lý do để khóa tài khoản.',
-            'reason_key.in' => 'Lý do không hợp lệ.',
             'other_detail.required_if' => 'Vui lòng nhập chi tiết cho lý do khác.'
         ]);
 
@@ -55,7 +95,6 @@ class UserController extends Controller
         $user->status = $request->status; 
         
         if ($request->status === User::STATUS_LOCKED) {
-            // Logic: Nếu chọn OTHER thì lấy văn bản nhập tay, ngược lại lấy văn bản chuẩn từ Model
             $user->status_reason = ($request->reason_key === 'OTHER') 
                 ? $request->other_detail 
                 : User::BLOCK_REASONS[$request->reason_key];
@@ -73,11 +112,11 @@ class UserController extends Controller
     }
 
     // =========================================================================
-    // DÀNH RIÊNG CHO SUPER ADMIN (Quản lý Admin cấp dưới)
+    // 2. QUẢN LÝ ADMIN (CHỈ DÀNH RIÊNG CHO SUPER ADMIN)
     // =========================================================================
 
     /**
-     * 3. Lấy danh sách tất cả các tài khoản Admin
+     * Lấy danh sách tất cả các tài khoản Admin
      */
     public function getAdminList()
     {
@@ -92,7 +131,7 @@ class UserController extends Controller
     }
 
     /**
-     * 4. Tạo tài khoản Admin mới
+     * Tạo tài khoản Admin mới
      */
     public function createAdmin(Request $request)
     {
@@ -124,7 +163,7 @@ class UserController extends Controller
     }
 
     /**
-     * 5. Cập nhật thông tin Admin khác
+     * Cập nhật thông tin Admin cấp dưới
      */
     public function updateAdmin(Request $request, $id)
     {
@@ -155,7 +194,7 @@ class UserController extends Controller
     }
 
     /**
-     * 6. Xóa tài khoản Admin
+     * Xóa tài khoản Admin
      */
     public function deleteAdmin($id)
     {

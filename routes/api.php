@@ -22,19 +22,26 @@ Route::middleware('auth.jwt')->group(function () {
         ]);
     });
 
-    // NHÓM DÀNH CHO ADMIN
+   // NHÓM DÀNH CHO ADMIN
     Route::middleware('auth.role:Admin')->group(function () {
         Route::get('/admin', function () {
             return response()->json(['message' => 'Hello World']);
         });
 
-        // Quản lý User (Sinh viên)
+        // --- QUẢN LÝ USER (SINH VIÊN) ---
         Route::get('admin/users', [AdminUserController::class, 'index']);
         Route::post('admin/users/{id}/status', [AdminUserController::class, 'updateStatus']);
+        
+        // Mới thêm: Cập nhật thông tin và Xóa sinh viên
+        Route::put('admin/users/{id}', [AdminUserController::class, 'updateStudent']);
+        Route::delete('admin/users/{id}', [AdminUserController::class, 'deleteStudent']);
 
-        // Kiểm duyệt bài đăng
+        // --- KIỂM DUYỆT BÀI ĐĂNG ---
         Route::get('admin/posts/pending', [AdminPostController::class, 'getPendingPosts']);
         Route::post('admin/posts/{id}/approve', [AdminPostController::class, 'approvePost']);
+        
+        // Mới thêm: Xóa bài viết vi phạm
+        Route::delete('admin/posts/{id}', [AdminPostController::class, 'deletePost']);
     });
 
     // NHÓM DÀNH CHO SUPER ADMIN (Quản lý các Admin khác)
