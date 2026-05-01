@@ -9,7 +9,6 @@ use App\Http\Controllers\Api\UserController;
 Route::post('login', [AuthenticatedController::class, 'login'])
     ->name('login');
 
-//reset password
 Route::post('reset-password', [UserController::class, 'resetPassword']);
 
 Route::middleware('auth.jwt')->group(function () {
@@ -42,9 +41,15 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('change-password', [UserController::class, 'changePassword']);
     });
 
+    //route for user search
+    Route::prefix('user')->group(function () {
+        Route::get('/search', [UserController::class, 'search']);
+    });
+
     //route for post
     Route::prefix('post')->group(function () {
         Route::get('/', [PostController::class, 'getList']);
+        Route::get('/search', [PostController::class, 'search']);
         Route::post('/', [PostController::class, 'create']);
         Route::put('/{id}', [PostController::class, 'update']);
         Route::delete('/{id}', [PostController::class, 'destroy']);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreatePostRequest;
 use App\Http\Requests\GetListPostRequest;
+use App\Http\Requests\SearchPostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\PostCollection;
 use App\Http\Resources\PostResource;
@@ -23,6 +24,16 @@ class PostController extends Controller
     {
         $perPage = $request->integer('per_page', 15);
         $posts = $this->postRepository->getFeed($perPage);
+
+        return new PostCollection($posts);
+    }
+    // GET /api/posts/search - tìm kiếm bài viết
+    public function search(SearchPostRequest $request): PostCollection
+    {
+        $filters = $request->only(['keyword', 'category_id']);
+        $perPage = $request->integer('per_page', 15);
+
+        $posts = $this->postRepository->search($filters, $perPage);
 
         return new PostCollection($posts);
     }
