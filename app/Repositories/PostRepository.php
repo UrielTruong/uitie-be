@@ -40,20 +40,39 @@ class PostRepository implements PostRepositoryInterface
         $post->delete(); // soft delete vì Post có SoftDeletes
     }
 
-    public function search(array $filters, int $perPage = 15): LengthAwarePaginator
+    public function adminSearch(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        $query = Post::with(['user', 'category', 'attachments'])
-            ->where('visibility', Post::VISIBILITY_PUBLIC)
-            ->where('status', Post::STATUS_ACCEPTED);
+        $query = Post::with(['user', 'category', 'attachments']);
 
-        // Tìm theo nội dung (LIKE) - search contains
+        // Không có where visibility/status — admin thấy tất cả bài kể cả Private, Pending, Rejected
+
         if (!empty($filters['keyword'])) {
             $query->where('content', 'like', "%{$filters['keyword']}%");
         }
 
-        // Lọc theo danh mục / chủ đề search exact
         if (!empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
+        }
+
+        // Admin-only filters
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['visibility'])) {
+            $query->where('visibility', $filters['visibility']);
+        }
+
+        if (!empty($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
+
+        if (!empty($filters['from_date'])) {
+            $query->whereDate('created_at', '>=', $filters['from_date']);
+        }
+
+        if (!empty($filters['to_date'])) {
+            $query->whereDate('created_at', '<=', $filters['to_date']);
         }
 
         return $query->latest()->paginate($perPage);

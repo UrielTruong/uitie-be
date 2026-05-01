@@ -126,7 +126,8 @@ class UserController extends Controller
             'message' => 'Password reset successfully',
         ]);
     }
-    // GET /api/users/search
+
+    //GET /api/users/search
     public function search(SearchUserRequest $request): UserCollection
     {
         $filters = $request->only(['keyword', 'mssv', 'class_name', 'faculty']);

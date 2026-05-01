@@ -14,5 +14,5 @@ interface PostRepositoryInterface
 
     public function delete(int $id);
 
-    public function search(array $filters, int $perPage);
+    public function adminSearch(array $filters, int $perPage);
 }
