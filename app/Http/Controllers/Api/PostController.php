@@ -27,6 +27,7 @@ class PostController extends Controller
 
         return new PostCollection($posts);
     }
+
     // GET /api/posts/search - tìm kiếm bài viết
     public function search(SearchPostRequest $request): PostCollection
     {
