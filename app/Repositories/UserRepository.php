@@ -127,4 +127,39 @@ class UserRepository implements UserRepositoryInterface
 
         return $query->latest()->paginate($perPage);
     }
+
+    public function getAllForExport(array $filters = []): Collection
+    {
+        $query = $this->model->newQuery();
+
+        if (!empty($filters['keyword'])) {
+            $keyword = $filters['keyword'];
+            $query->where(function ($q) use ($keyword) {
+                $q->where('full_name', 'like', "%{$keyword}%")
+                    ->orWhere('email', 'like', "%{$keyword}%");
+            });
+        }
+
+        if (!empty($filters['mssv'])) {
+            $query->where('mssv', 'like', "%{$filters['mssv']}%");
+        }
+
+        if (!empty($filters['class_name'])) {
+            $query->where('class_name', 'like', "%{$filters['class_name']}%");
+        }
+
+        if (!empty($filters['faculty'])) {
+            $query->where('faculty', 'like', "%{$filters['faculty']}%");
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['role'])) {
+            $query->where('role', $filters['role']);
+        }
+
+        return $query->orderBy('full_name')->get();
+    }
 }
