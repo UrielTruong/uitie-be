@@ -14,7 +14,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $users = User::query()
-            ->where('role', User::ROLE_STUDENT) // Chỉ lấy sinh viên
+            ->where('role', User::ROLE_STUDENT)
             ->when($request->faculty, function ($query, $faculty) {
                 return $query->where('faculty', $faculty);
             })
@@ -32,23 +32,36 @@ class UserController extends Controller
 
     /**
      * 2. Khóa hoặc Mở khóa tài khoản (Dành cho Admin/Super Admin)
+     * ĐÃ CẬP NHẬT: Sử dụng reason_key từ Model
      */
     public function updateStatus(Request $request, $id)
     {
+        // Lấy danh sách các KEY hợp lệ (SPAM, VIOLATION,...) để validate
+        $validReasons = implode(',', array_keys(User::BLOCK_REASONS));
+
         $request->validate([
             'status' => 'required|in:' . User::STATUS_ACTIVE . ',' . User::STATUS_LOCKED,
-            'reason' => 'required_if:status,' . User::STATUS_LOCKED . '|string|nullable' 
+            // Validate: Nếu Locked thì bắt buộc chọn key trong danh sách
+            'reason_key' => 'required_if:status,' . User::STATUS_LOCKED . '|in:' . $validReasons,
+            // Nếu chọn "OTHER" thì mới bắt buộc nhập chi tiết
+            'other_detail' => 'required_if:reason_key,OTHER|string|nullable' 
         ], [
-            'reason.required_if' => 'Vui lòng nhập lý do khi khóa tài khoản.'
+            'reason_key.required_if' => 'Vui lòng chọn một lý do để khóa tài khoản.',
+            'reason_key.in' => 'Lý do không hợp lệ.',
+            'other_detail.required_if' => 'Vui lòng nhập chi tiết cho lý do khác.'
         ]);
 
         $user = User::findOrFail($id);
-        
-        // Cập nhật trạng thái và lý do dùng Constant
         $user->status = $request->status; 
-        $user->status_reason = ($request->status === User::STATUS_LOCKED) 
-            ? $request->reason 
-            : null;
+        
+        if ($request->status === User::STATUS_LOCKED) {
+            // Logic: Nếu chọn OTHER thì lấy văn bản nhập tay, ngược lại lấy văn bản chuẩn từ Model
+            $user->status_reason = ($request->reason_key === 'OTHER') 
+                ? $request->other_detail 
+                : User::BLOCK_REASONS[$request->reason_key];
+        } else {
+            $user->status_reason = null;
+        }
             
         $user->save();
 
@@ -95,7 +108,7 @@ class UserController extends Controller
         $admin = User::create([
             'full_name'    => $request->full_name,
             'email'        => $request->email,
-            'password'     => $request->password, // Tự động hash do $casts trong Model
+            'password'     => $request->password,
             'mssv'         => $request->mssv,
             'phone_number' => $request->phone_number,
             'faculty'      => $request->faculty,
@@ -109,6 +122,7 @@ class UserController extends Controller
             'data'    => $admin
         ], 201);
     }
+
     /**
      * 5. Cập nhật thông tin Admin khác
      */
@@ -120,7 +134,7 @@ class UserController extends Controller
             'full_name'    => 'required|string|max:255',
             'phone_number' => 'nullable|string|max:15',
             'faculty'      => 'nullable|string',
-            'password'     => 'nullable|string|min:6', // Chỉ nhập khi muốn đổi pass
+            'password'     => 'nullable|string|min:6',
         ]);
 
         $admin->full_name = $request->full_name;
@@ -128,7 +142,7 @@ class UserController extends Controller
         $admin->faculty = $request->faculty;
 
         if ($request->filled('password')) {
-            $admin->password = $request->password; // Tự động hash do Model Cast
+            $admin->password = $request->password;
         }
 
         $admin->save();
@@ -145,9 +159,7 @@ class UserController extends Controller
      */
     public function deleteAdmin($id)
     {
-        // Chỉ cho phép xóa nếu đúng là role Admin
         $admin = User::where('id', $id)->where('role', User::ROLE_ADMIN)->firstOrFail();
-        
         $admin->delete();
 
         return response()->json([

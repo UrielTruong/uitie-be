@@ -13,9 +13,8 @@ class PostController extends Controller
      */
     public function getPendingPosts()
     {
-        // Lấy bài viết có trạng thái Pending, kèm thông tin người đăng (user)
         $posts = Post::where('status', 'Pending')
-            ->with('user')
+            ->with(['user:id,full_name,mssv']) // Chỉ lấy các cột cần thiết của user cho nhẹ
             ->orderBy('created_at', 'desc')
             ->paginate(10);
         
@@ -30,20 +29,18 @@ class PostController extends Controller
      */
     public function approvePost(Request $request, $id)
     {
-        // Kiểm tra dữ liệu đầu vào đúng chuẩn nhóm quy định
         $request->validate([
             'status' => 'required|in:Accepted,Rejected',
-            'reject_reason' => 'required_if:status,Rejected|string|nullable'
+            'reject_reason' => 'required_if:status,Rejected|string|max:500|nullable'
         ], [
-            'reject_reason.required_if' => 'Vui lòng nhập lý do khi từ chối bài viết.'
+            'reject_reason.required_if' => 'Vui lòng cung cấp lý do để sinh viên biết tại sao bài viết bị từ chối.'
         ]);
 
         $post = Post::findOrFail($id);
         
-        // Cập nhật trạng thái mới
         $post->status = $request->status;
         
-        // Nếu bị từ chối thì lưu lý do, nếu được duyệt thì xóa lý do cũ (nếu có)
+        // Cập nhật lý do từ chối: Nếu Accepted thì xóa sạch lý do cũ để dữ liệu sạch
         $post->reject_reason = ($request->status === 'Rejected') 
             ? $request->reject_reason 
             : null;
@@ -52,8 +49,24 @@ class PostController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Cập nhật trạng thái bài viết thành công!',
+            'message' => ($request->status === 'Accepted') 
+                ? 'Bài viết đã được duyệt thành công!' 
+                : 'Bài viết đã bị từ chối.',
             'data' => $post
+        ]);
+    }
+
+    /**
+     * 3. Xóa bài viết vi phạm (Admin có quyền xóa trực tiếp)
+     */
+    public function deletePost($id)
+    {
+        $post = Post::findOrFail($id);
+        $post->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã xóa bài viết khỏi hệ thống.'
         ]);
     }
 }
