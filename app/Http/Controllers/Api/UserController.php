@@ -13,6 +13,7 @@ use App\Http\Requests\ChangePasswordRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\SearchUserRequest;
 
 class UserController extends Controller
 {
@@ -124,5 +125,16 @@ class UserController extends Controller
             'status'  => true,
             'message' => 'Password reset successfully',
         ]);
+    }
+
+    //GET /api/users/search
+    public function search(SearchUserRequest $request): UserCollection
+    {
+        $filters = $request->only(['keyword', 'mssv', 'class_name', 'faculty']);
+        $perPage = $request->integer('per_page', 15);
+
+        $users = $this->users->search($filters, $perPage);
+
+        return new UserCollection($users);
     }
 }

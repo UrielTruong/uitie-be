@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\PostController as AdminPostController;
+use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\AuthenticatedController;
 use Illuminate\Http\Request;
@@ -13,26 +15,31 @@ Route::post('login', [AuthenticatedController::class, 'login'])
 Route::post('reset-password', [UserController::class, 'resetPassword']);
 
 Route::middleware('auth.jwt')->group(function () {
-    Route::get('test', function (Request $request) {
-        return response()->json([
-            'message' => 'Hello World',
-            'userId' => $request->user_id,
-            'userRole' => $request->user_role,
-        ]);
-    });
 
-    Route::middleware('auth.role:Admin')->group(function () {
+    Route::middleware('auth.role:ADMIN')->group(function () {
         Route::get('/admin', function () {
             return response()->json([
                 'message' => 'Hello World',
             ]);
         });
     });
-    Route::middleware('auth.role:Super Admin')->group(function () {
+    Route::middleware('auth.role:SUPER_ADMIN')->group(function () {
         Route::get('/super-admin', function () {
             return response()->json([
                 'message' => 'Hello World',
             ]);
+        });
+    });
+
+    //route for admin
+    Route::middleware('auth.role:ADMIN,SUPER_ADMIN')->group(function () {
+
+        Route::prefix('admin')->group(function () {
+            // Quản lý người dùng
+            Route::get('user/search', [AdminUserController::class, 'searchUser']);
+
+            // Quản lý bài viết
+            Route::get('post/search', [AdminPostController::class, 'searchPost']);
         });
     });
 
@@ -42,9 +49,15 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('change-password', [UserController::class, 'changePassword']);
     });
 
+    //route for user search
+    Route::prefix('user')->group(function () {
+        Route::get('/search', [UserController::class, 'search']);
+    });
+
     //route for post
     Route::prefix('post')->group(function () {
         Route::get('/', [PostController::class, 'getList']);
+        Route::get('/search', [PostController::class, 'search']);
         Route::post('/', [PostController::class, 'create']);
         Route::put('/{id}', [PostController::class, 'update']);
         Route::delete('/{id}', [PostController::class, 'destroy']);

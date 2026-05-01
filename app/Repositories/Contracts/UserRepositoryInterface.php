@@ -46,4 +46,8 @@ interface UserRepositoryInterface
      * Delete a user by ID.
      */
     public function delete(int $id): bool;
+
+    public function search(array $filters, int $perPage): LengthAwarePaginator;
+
+    public function adminSearch(array $filters, int $perPage): LengthAwarePaginator;
 }
