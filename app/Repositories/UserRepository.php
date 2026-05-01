@@ -116,14 +116,13 @@ class UserRepository implements UserRepositoryInterface
             $query->where('faculty', 'like', "%{$filters['faculty']}%");
         }
 
-
         // Admin-only filters
         if (!empty($filters['role'])) {
-            $query->where('role', $filters['role']);       // khớp chính xác
+            $query->where('role', $filters['role']);
         }
 
         if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);   // khớp chính xác
+            $query->where('status', $filters['status']);
         }
 
         return $query->latest()->paginate($perPage);
