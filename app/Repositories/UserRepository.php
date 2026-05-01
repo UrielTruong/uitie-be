@@ -86,4 +86,35 @@ class UserRepository implements UserRepositoryInterface
 
         return (bool) $user->delete();
     }
+
+    public function search(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = $this->model->newQuery();
+
+        // Tìm theo tên hoặc email (LIKE)
+        if (!empty($filters['keyword'])) {
+            $keyword = $filters['keyword'];
+            $query->where(function ($q) use ($keyword) {
+                $q->where('full_name', 'like', "%{$keyword}%")
+                    ->orWhere('email', 'like', "%{$keyword}%");
+            });
+        }
+
+        // Tìm chính xác theo mssv
+        if (!empty($filters['mssv'])) {
+            $query->where('mssv', 'like', "%{$filters['mssv']}%");
+        }
+
+        // Lọc theo lớp (LIKE để khớp một phần)
+        if (!empty($filters['class_name'])) {
+            $query->where('class_name', 'like', "%{$filters['class_name']}%");
+        }
+
+        // Lọc theo khoa (LIKE để khớp một phần)
+        if (!empty($filters['faculty'])) {
+            $query->where('faculty', 'like', "%{$filters['faculty']}%");
+        }
+
+        return $query->latest()->paginate($perPage);
+    }
 }
