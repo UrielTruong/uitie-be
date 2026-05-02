@@ -162,4 +162,9 @@ class UserRepository implements UserRepositoryInterface
 
         return $query->orderBy('full_name')->get();
     }
+
+    public function countUsers()
+    {
+        return $this->model->where('status', User::STATUS_ACTIVE)->count();
+    }
 }

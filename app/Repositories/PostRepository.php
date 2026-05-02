@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Repositories\Contracts\PostRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class PostRepository implements PostRepositoryInterface
 {
@@ -100,5 +101,18 @@ class PostRepository implements PostRepositoryInterface
         }
 
         return $query->orderBy('created_at', 'desc')->get();
+    }
+
+    public function countPostsByCategory()
+    {
+        return Post::select('categories.category_name', DB::raw('COUNT(*) as total'))
+            ->join('categories', 'posts.category_id', '=', 'categories.id')
+            ->groupBy('categories.category_name')
+            ->get();
+    }
+
+    public function countPosts()
+    {
+        return Post::where('status', Post::STATUS_PENDING)->count();
     }
 }

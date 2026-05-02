@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Api\Admin\StatisticController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\AuthenticatedController;
 use Illuminate\Http\Request;
@@ -55,6 +56,9 @@ Route::middleware('auth.jwt')->group(function () {
 
             //export report pdf
             Route::get('/report/export-pdf', [AdminReportController::class, 'exportPdf']);
+
+            //get statistic
+            Route::get('/statistic', [StatisticController::class, 'getStatistic']);
         });
     });
 
