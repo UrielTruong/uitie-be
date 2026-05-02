@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Api\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\AuthenticatedController;
 use Illuminate\Http\Request;
@@ -41,10 +42,13 @@ Route::middleware('auth.jwt')->group(function () {
             Route::get('post/search', [AdminPostController::class, 'searchPost']);
 
             //export user pdf
-            Route::get('/user/export-pdf', [UserController::class, 'exportPdf']);
+            Route::get('/user/export-pdf', [AdminUserController::class, 'exportPdf']);
 
             //export post pdf
-            Route::get('/post/export-pdf', [PostController::class, 'exportPdf']);
+            Route::get('/post/export-pdf', [AdminPostController::class, 'exportPdf']);
+
+            //export report pdf
+            Route::get('/report/export-pdf', [AdminReportController::class, 'exportPdf']);
         });
     });
 

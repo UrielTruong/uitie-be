@@ -116,36 +116,4 @@ class PostController extends Controller
             'message' => 'Post deleted successfully',
         ]);
     }
-
-    public function exportPdf(AdminExportPostPdfRequest $request): Response
-    {
-        $filters = $request->only(['keyword', 'category_id', 'status', 'visibility']);
-
-        $posts = $this->postRepository->getAllForExport($filters);
-
-        $stats = [
-            'total'    => $posts->count(),
-            'accepted' => $posts->where('status', Post::STATUS_ACCEPTED)->count(),
-            'pending'  => $posts->where('status', Post::STATUS_PENDING)->count(),
-            'rejected' => $posts->where('status', Post::STATUS_REJECTED)->count(),
-            'public'   => $posts->where('visibility', Post::VISIBILITY_PUBLIC)->count(),
-            'private'  => $posts->where('visibility', Post::VISIBILITY_PRIVATE)->count(),
-        ];
-
-        $pdf = Pdf::loadView('reports.posts-pdf', [
-            'posts'       => $posts,
-            'stats'       => $stats,
-            'filters'     => $filters,
-            'generatedAt' => Carbon::now()->format('d/m/Y H:i:s'),
-        ])
-            ->setPaper('a4', 'landscape')
-            ->setOptions([
-                'defaultFont'          => 'DejaVu Sans',
-                'isHtml5ParserEnabled' => true,
-            ]);
-
-        $filename = 'danh-sach-bai-viet-' . Carbon::now()->format('Ymd-His') . '.pdf';
-
-        return $pdf->download($filename);
-    }
 }
