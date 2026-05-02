@@ -52,4 +52,6 @@ interface UserRepositoryInterface
     public function adminSearch(array $filters, int $perPage): LengthAwarePaginator;
 
     public function getAllForExport(array $filters = []): Collection;
+
+    public function countUsers();
 }

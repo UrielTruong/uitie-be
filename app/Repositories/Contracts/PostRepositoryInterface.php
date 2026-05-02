@@ -19,4 +19,8 @@ interface PostRepositoryInterface
     public function adminSearch(array $filters, int $perPage);
 
     public function getAllForExport(array $filters = []): Collection;
+
+    public function countPostsByCategory();
+
+    public function countPosts();
 }

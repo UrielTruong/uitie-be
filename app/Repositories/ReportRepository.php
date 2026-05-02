@@ -67,4 +67,9 @@ class ReportRepository implements ReportRepositoryInterface
 
         return $report->fresh(['reporter', 'reportedUser', 'reportedPost', 'resolver']);
     }
+
+    public function countReports()
+    {
+        return Report::where('status', Report::STATUS_PENDING)->count();
+    }
 }

@@ -20,4 +20,6 @@ interface ReportRepositoryInterface
     public function findById(int $id): ?Report;
 
     public function validate(Report $report, string $adminId, string $status): ?Report;
+
+    public function countReports();
 }
