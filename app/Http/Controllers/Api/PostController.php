@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ExportPostPdfRequest as AdminExportPostPdfRequest;
 use App\Http\Requests\CreatePostRequest;
+use App\Http\Requests\ExportPostPdfRequest;
 use App\Http\Requests\GetListPostRequest;
 use App\Http\Requests\SearchPostRequest;
 use App\Http\Requests\UpdatePostRequest;
@@ -11,7 +13,10 @@ use App\Http\Resources\PostCollection;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use App\Repositories\Contracts\PostRepositoryInterface;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 class PostController extends Controller
 {
@@ -34,7 +39,7 @@ class PostController extends Controller
         $filters = $request->only(['keyword', 'category_id']);
         $perPage = $request->integer('per_page', 15);
 
-        $posts = $this->postRepository->search($filters, $perPage);
+        $posts = $this->postRepository->adminSearch($filters, $perPage);
 
         return new PostCollection($posts);
     }

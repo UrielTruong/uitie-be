@@ -2,6 +2,8 @@
 
 namespace App\Repositories\Contracts;
 
+use Illuminate\Database\Eloquent\Collection;
+
 interface PostRepositoryInterface
 {
     public function getFeed(int $perPage);
@@ -15,4 +17,6 @@ interface PostRepositoryInterface
     public function delete(int $id);
 
     public function adminSearch(array $filters, int $perPage);
+
+    public function getAllForExport(array $filters = []): Collection;
 }

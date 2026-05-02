@@ -142,38 +142,4 @@ class UserController extends Controller
 
         return new UserCollection($users);
     }
-
-    public function exportPdf(ExportUserPdfRequest $request): Response
-    {
-        $filters = $request->only(['keyword', 'mssv', 'class_name', 'faculty', 'status', 'role']);
-
-        $users = $this->users->getAllForExport($filters);
-
-        // Thống kê cho Report Footer
-        $stats = [
-            'total'    => $users->count(),
-            'active'   => $users->where('status', User::STATUS_ACTIVE)->count(),
-            'inactive' => $users->where('status', User::STATUS_INACTIVE)->count(),
-            'locked'   => $users->where('status', User::STATUS_LOCKED)->count(),
-            'student'  => $users->where('role', User::ROLE_STUDENT)->count(),
-            'admin'    => $users->where('role', User::ROLE_ADMIN)->count(),
-        ];
-
-        $pdf = Pdf::loadView('reports.users-pdf', [
-            'users'       => $users,
-            'stats'       => $stats,
-            'filters'     => $filters,
-            'generatedAt' => Carbon::now()->format('d/m/Y H:i:s'),
-            'exportedBy'  => $request->attributes->get('user_id'), // từ JWT middleware
-        ])
-            ->setPaper('a4', 'landscape') // landscape vì bảng có nhiều cột
-            ->setOptions([
-                'defaultFont' => 'DejaVu Sans', // hỗ trợ tiếng Việt
-                'isHtml5ParserEnabled' => true,
-            ]);
-
-        $filename = 'danh-sach-nguoi-dung-' . Carbon::now()->format('Ymd-His') . '.pdf';
-
-        return $pdf->download($filename);
-    }
 }
