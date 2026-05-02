@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Post;
 use App\Repositories\Contracts\PostRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class PostRepository implements PostRepositoryInterface
@@ -76,5 +77,28 @@ class PostRepository implements PostRepositoryInterface
         }
 
         return $query->latest()->paginate($perPage);
+    }
+
+    public function getAllForExport(array $filters = []): Collection
+    {
+        $query = Post::with(['user', 'category']);
+
+        if (!empty($filters['keyword'])) {
+            $query->where('content', 'like', "%{$filters['keyword']}%");
+        }
+
+        if (!empty($filters['category_id'])) {
+            $query->where('category_id', $filters['category_id']);
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['visibility'])) {
+            $query->where('visibility', $filters['visibility']);
+        }
+
+        return $query->orderBy('created_at', 'desc')->get();
     }
 }

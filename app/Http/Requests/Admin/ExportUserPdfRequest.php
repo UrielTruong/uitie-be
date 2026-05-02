@@ -9,7 +9,7 @@ class ExportUserPdfRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return true; // middleware auth.role đã kiểm tra quyền
     }
 
     public function rules(): array

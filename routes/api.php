@@ -42,6 +42,9 @@ Route::middleware('auth.jwt')->group(function () {
 
             //export user pdf
             Route::get('/user/export-pdf', [UserController::class, 'exportPdf']);
+
+            //export post pdf
+            Route::get('/post/export-pdf', [PostController::class, 'exportPdf']);
         });
     });
 
