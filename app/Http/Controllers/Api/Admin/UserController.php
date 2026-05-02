@@ -58,6 +58,7 @@ class UserController extends Controller
                 'isHtml5ParserEnabled' => true,
             ]);
 
+
         $filename = 'danh-sach-nguoi-dung-' . Carbon::now()->format('Ymd-His') . '.pdf';
 
         return $pdf->download($filename);

@@ -16,6 +16,7 @@ class UpdatePostRequest extends FormRequest
         return [
             'content'    => ['nullable', 'string'],
             'visibility' => ['nullable', 'string', 'in:Public,Private'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
         ];
     }
 }

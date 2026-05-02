@@ -41,6 +41,12 @@ Route::middleware('auth.jwt')->group(function () {
             // Quản lý bài viết
             Route::get('post/search', [AdminPostController::class, 'searchPost']);
 
+            //Quản lý báo cáo vi phạm
+            Route::get('report', [AdminReportController::class, 'searchReport']);
+
+            //Validate report
+            Route::put('report/{id}/validate', [AdminReportController::class, 'validateReport']);
+
             //export user pdf
             Route::get('/user/export-pdf', [AdminUserController::class, 'exportPdf']);
 
