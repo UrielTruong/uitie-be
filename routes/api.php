@@ -2,13 +2,13 @@
 
 use App\Http\Controllers\Api\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Api\Admin\ReportController as AdminReportController;
-use App\Http\Controllers\Api\Admin\StatisticController;
+use App\Http\Controllers\Api\Admin\StatisticController as AdminStatisticController;
+use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\AuthenticatedController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Admin\UserController as AdminUserController;
 
 Route::post('login', [AuthenticatedController::class, 'login'])
     ->name('login');
@@ -18,37 +18,32 @@ Route::post('reset-password', [UserController::class, 'resetPassword']);
 // 2. PROTECTED ROUTES (Yêu cầu đăng nhập JWT)
 Route::middleware('auth.jwt')->group(function () {
 
+    //only need 1 api to manage admin and user (SUPER ADMIN)
     //route for SUPER ADMIN
     Route::middleware('auth.role:SUPER_ADMIN')->group(function () {
         Route::prefix('super-admin')->group(function () {
-            Route::get('manage-admins', [AdminUserController::class, 'getAdminList']);
-            Route::post('manage-admins', [AdminUserController::class, 'createAdmin']);
-            Route::put('manage-admins/{id}', [AdminUserController::class, 'updateAdmin']);
-            Route::delete('manage-admins/{id}', [AdminUserController::class, 'deleteAdmin']);
+
+            // Manage users
+            Route::get('user', [AdminUserController::class, 'searchUser']);
+
+            Route::post('user', [AdminUserController::class, 'createNewUser']);
+
+            Route::put('user/{id}', [AdminUserController::class, 'updateUser']);
+
+            Route::delete('user/{id}', [AdminUserController::class, 'deleteUser']);
         });
     });
 
-    //route for admin
+    //route for ADMIN
     Route::middleware('auth.role:ADMIN,SUPER_ADMIN')->group(function () {
 
         Route::prefix('admin')->group(function () {
-            // Quản lý người dùng
-            Route::get('user/search', [AdminUserController::class, 'searchUser']);
-
-            // --- QUẢN LÝ USER (SINH VIÊN) ---
-            Route::get('admin/users', [AdminUserController::class, 'index']);
-            Route::post('admin/users/{id}/status', [AdminUserController::class, 'updateStatus']);
-
-            // Mới thêm: Cập nhật thông tin và Xóa sinh viên
-            Route::put('admin/users/{id}', [AdminUserController::class, 'updateStudent']);
-            Route::delete('admin/users/{id}', [AdminUserController::class, 'deleteStudent']);
-
             // --- KIỂM DUYỆT BÀI ĐĂNG ---
-            Route::get('admin/posts/pending', [AdminPostController::class, 'getPendingPosts']);
-            Route::post('admin/posts/{id}/approve', [AdminPostController::class, 'approvePost']);
+            Route::get('posts/pending', [AdminPostController::class, 'getPendingPosts']);
+            Route::post('posts/{id}/approve', [AdminPostController::class, 'approvePost']);
 
             // Mới thêm: Xóa bài viết vi phạm
-            Route::delete('admin/posts/{id}', [AdminPostController::class, 'deletePost']);
+            Route::delete('posts/{id}', [AdminPostController::class, 'deletePost']);
 
             // Quản lý bài viết
             Route::get('post/search', [AdminPostController::class, 'searchPost']);
@@ -57,10 +52,12 @@ Route::middleware('auth.jwt')->group(function () {
             Route::get('report', [AdminReportController::class, 'searchReport']);
 
             //Xem báo cáo statistic
-            Route::get('/statistic', [StatisticController::class, 'getStatistic']);
+            Route::get('/statistic', [AdminStatisticController::class, 'getStatistic']);
 
             //Validate report
             Route::put('report/{id}/validate', [AdminReportController::class, 'validateReport']);
+
+            //--- EXPORT REPORT ---
 
             //export user pdf
             Route::get('/user/export-pdf', [AdminUserController::class, 'exportPdf']);
@@ -72,21 +69,20 @@ Route::middleware('auth.jwt')->group(function () {
             Route::get('/report/export-pdf', [AdminReportController::class, 'exportPdf']);
 
             //export statistic pdf
-            Route::get('/statistic/export-pdf', [StatisticController::class, 'exportPdf']);
+            Route::get('/statistic/export-pdf', [AdminStatisticController::class, 'exportPdf']);
         });
     });
 
-    //route for user
+    //route for USER
     Route::prefix('user')->group(function () {
+        //change password
         Route::post('change-password', [UserController::class, 'changePassword']);
-    });
-
-    //route for user search
-    Route::prefix('user')->group(function () {
+        //search user
         Route::get('/search', [UserController::class, 'search']);
     });
 
-    //route for post
+
+    //route for POST - FEED
     Route::prefix('post')->group(function () {
         Route::get('/', [PostController::class, 'getList']);
         Route::get('/search', [PostController::class, 'search']);

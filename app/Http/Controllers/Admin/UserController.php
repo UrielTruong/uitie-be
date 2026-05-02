@@ -15,24 +15,24 @@ class UserController extends Controller
     /**
      * Lấy danh sách Sinh viên
      */
-    public function index(Request $request)
-    {
-        $users = User::query()
-            ->where('role', User::ROLE_STUDENT)
-            ->when($request->faculty, function ($query, $faculty) {
-                return $query->where('faculty', $faculty);
-            })
-            ->when($request->class_name, function ($query, $className) {
-                return $query->where('class_name', $className);
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-        
-        return response()->json([
-            'success' => true,
-            'data' => $users
-        ]);
-    }
+    // public function searchUser2(Request $request)
+    // {
+    //     $users = User::query()
+    //         ->where('role', User::ROLE_STUDENT | User::ROLE_ADMIN | User::ROLE_SUPER_ADMIN)
+    //         ->when($request->faculty, function ($query, $faculty) {
+    //             return $query->where('faculty', $faculty);
+    //         })
+    //         ->when($request->class_name, function ($query, $className) {
+    //             return $query->where('class_name', $className);
+    //         })
+    //         ->orderBy('created_at', 'desc')
+    //         ->paginate(10);
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $users
+    //     ]);
+    // }
 
     /**
      * Cập nhật thông tin chi tiết của Sinh viên
@@ -51,7 +51,12 @@ class UserController extends Controller
         ]);
 
         $student->update($request->only([
-            'full_name', 'mssv', 'phone_number', 'faculty', 'class_name', 'academic_year'
+            'full_name',
+            'mssv',
+            'phone_number',
+            'faculty',
+            'class_name',
+            'academic_year'
         ]));
 
         return response()->json([
@@ -85,23 +90,23 @@ class UserController extends Controller
         $request->validate([
             'status' => 'required|in:' . User::STATUS_ACTIVE . ',' . User::STATUS_LOCKED,
             'reason_key' => 'required_if:status,' . User::STATUS_LOCKED . '|in:' . $validReasons,
-            'other_detail' => 'required_if:reason_key,OTHER|string|nullable' 
+            'other_detail' => 'required_if:reason_key,OTHER|string|nullable'
         ], [
             'reason_key.required_if' => 'Vui lòng chọn một lý do để khóa tài khoản.',
             'other_detail.required_if' => 'Vui lòng nhập chi tiết cho lý do khác.'
         ]);
 
         $user = User::findOrFail($id);
-        $user->status = $request->status; 
-        
+        $user->status = $request->status;
+
         if ($request->status === User::STATUS_LOCKED) {
-            $user->status_reason = ($request->reason_key === 'OTHER') 
-                ? $request->other_detail 
+            $user->status_reason = ($request->reason_key === 'OTHER')
+                ? $request->other_detail
                 : User::BLOCK_REASONS[$request->reason_key];
         } else {
             $user->status_reason = null;
         }
-            
+
         $user->save();
 
         return response()->json([
