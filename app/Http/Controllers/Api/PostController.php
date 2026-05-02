@@ -28,6 +28,7 @@ class PostController extends Controller
     public function getList(GetListPostRequest $request): PostCollection
     {
         $perPage = $request->integer('per_page', 15);
+        $posts = Post::whereNull('deleted_at');
         $posts = $this->postRepository->getFeed($perPage);
 
         return new PostCollection($posts);
@@ -69,8 +70,6 @@ class PostController extends Controller
     {
         $post = $this->postRepository->findById($id);
 
-        // Chỉ người tạo mới được sửa
-
         if ((string) $post->user_id !== (string) $request->user_id) {
             return response()->json([
                 'status'  => false,
@@ -79,17 +78,16 @@ class PostController extends Controller
         }
 
         $updated = $this->postRepository->update($id, [
-            'content'    => $request->content ?? $post->content,
-            'visibility' => $request->visibility ?? $post->visibility,
-            'is_edited'  => true,
+            'content'     => $request->content ?? $post->content,
+            'category_id' => $request->category_id ?? $post->category_id,
+            'visibility'  => $request->visibility ?? $post->visibility,
+            'updated_at'  => Carbon::now(),
+            'is_edited'   => true,
         ]);
-
-        $updated->load('user', 'category');
-
         return response()->json([
             'status'  => true,
             'message' => 'Post updated successfully',
-            'data'    => new PostResource($updated),
+            'data'    => new PostResource($post),
         ]);
     }
 
