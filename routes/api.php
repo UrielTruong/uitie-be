@@ -45,6 +45,9 @@ Route::middleware('auth.jwt')->group(function () {
             //Quản lý báo cáo vi phạm
             Route::get('report', [AdminReportController::class, 'searchReport']);
 
+            //Xem báo cáo statistic
+            Route::get('/statistic', [StatisticController::class, 'getStatistic']);
+
             //Validate report
             Route::put('report/{id}/validate', [AdminReportController::class, 'validateReport']);
 
@@ -57,8 +60,8 @@ Route::middleware('auth.jwt')->group(function () {
             //export report pdf
             Route::get('/report/export-pdf', [AdminReportController::class, 'exportPdf']);
 
-            //get statistic
-            Route::get('/statistic', [StatisticController::class, 'getStatistic']);
+            //export statistic pdf
+            Route::get('/statistic/export-pdf', [StatisticController::class, 'exportPdf']);
         });
     });
 
