@@ -23,6 +23,15 @@ class User extends Authenticatable
     const STATUS_ACTIVE    = 'Active';
     const STATUS_LOCKED    = 'Locked';
 
+    // --- DANH SÁCH LÝ DO KHÓA TÀI KHOẢN ---
+    const BLOCK_REASONS = [
+        'SPAM'          => 'Tài khoản đăng bài quảng cáo hoặc spam liên tục.',
+        'VIOLATION'     => 'Vi phạm nghiêm trọng quy định cộng đồng UITie.',
+        'INAPPROPRIATE' => 'Sử dụng ngôn từ hoặc hình ảnh không phù hợp.',
+        'REPORTED'      => 'Bị nhiều người dùng báo cáo vi phạm.',
+        'OTHER'         => 'Lý do khác (Vui lòng ghi chú thêm).',
+    ];
+
     protected $fillable = [
         'email',
         'password',

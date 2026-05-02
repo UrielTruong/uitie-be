@@ -5,13 +5,18 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminSearchUserRequest;
 use App\Http\Requests\Admin\ExportUserPdfRequest;
+use App\Http\Requests\Admin\CreateNewUserRequest;
+use App\Http\Requests\Admin\DeleteUserRequest;
+use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Http\Resources\Admin\AdminUserResource;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -27,6 +32,59 @@ class UserController extends Controller
         $users = $this->users->adminSearch($filters, $perPage);
 
         return AdminUserResource::collection($users);
+    }
+
+    public function createNewUser(CreateNewUserRequest $request)
+    {
+        $user = $this->users->create([
+            'full_name' => $request->full_name,
+            'email' => $request->email,
+            //auto set password to 12345678
+            'password' => Hash::make('12345678'),
+            'role' => $request->role,
+            'status' => $request->status,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User created successfully',
+            'data' => $user
+        ], 201);
+    }
+
+    public function updateUser(UpdateUserRequest $request, $id)
+    {
+        $user = $this->users->findById($id);
+
+        $updated = $this->users->update($id, [
+            'full_name' => $request->full_name,
+            'role' => $request->role,
+            'status' => $request->status,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User updated successfully',
+            'data' => new AdminUserResource($updated)
+        ], 200);
+    }
+    public function deleteUser(int $id, \Illuminate\Http\Request $request): JsonResponse
+    {
+        $user = $this->users->findById($id);
+
+        if (!$user) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        $this->users->delete($id);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'User deleted successfully',
+        ]);
     }
 
     public function exportPdf(ExportUserPdfRequest $request): Response
