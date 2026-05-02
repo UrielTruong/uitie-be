@@ -2,7 +2,9 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Models\Report;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 interface ReportRepositoryInterface
 {
@@ -12,4 +14,10 @@ interface ReportRepositoryInterface
      * @param array<string, mixed> $filters
      */
     public function getAllForExport(array $filters = []): Collection;
+
+    public function adminSearch(array $filters, int $perPage): LengthAwarePaginator;
+
+    public function findById(int $id): ?Report;
+
+    public function validate(Report $report, string $adminId, string $status): ?Report;
 }

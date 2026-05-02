@@ -10,7 +10,7 @@ class AuthorizeRole
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        $userRole = $request->user_role;
+        $userRole = $request->attributes->get('user_role');
 
         if (! $userRole || ! in_array($userRole, $roles)) {
             return response()->json([

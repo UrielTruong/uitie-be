@@ -28,8 +28,8 @@ class AuthenticateJwt
             $payload = $this->jwtService->decode($token);
 
             // Attach user id to request for use in controllers
-            $request->merge(['user_id' => $payload->sub]);
-            $request->merge(['user_role' => $payload->role]);
+            $request->attributes->set('user_id', $payload->sub);
+            $request->attributes->set('user_role', $payload->role);
         } catch (\Firebase\JWT\ExpiredException $e) {
             return response()->json([
                 'status'  => false,
