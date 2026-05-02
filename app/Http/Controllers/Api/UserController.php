@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ExportUserPdfRequest;
 use App\Http\Requests\CreateNewUserRequest;
 use App\Http\Requests\GetListUserRequest;
 use App\Http\Resources\UserCollection;
@@ -13,6 +14,11 @@ use App\Http\Requests\ChangePasswordRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\SearchUserRequest;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\Response;
 
 class UserController extends Controller
 {
@@ -124,5 +130,16 @@ class UserController extends Controller
             'status'  => true,
             'message' => 'Password reset successfully',
         ]);
+    }
+
+    //GET /api/users/search
+    public function search(SearchUserRequest $request): UserCollection
+    {
+        $filters = $request->only(['keyword', 'mssv', 'class_name', 'faculty']);
+        $perPage = $request->integer('per_page', 15);
+
+        $users = $this->users->search($filters, $perPage);
+
+        return new UserCollection($users);
     }
 }

@@ -23,7 +23,7 @@ class AuthenticatedController extends Controller
                     'status'  => false,
                     'message' => 'Invalid credentials',
                     'data'    => null,
-                ], 401);
+                ], 400);
             }
 
             $token = $this->jwtService->encode($user);
@@ -34,7 +34,7 @@ class AuthenticatedController extends Controller
                 'status'  => false,
                 'message' => 'Invalid credentials',
                 'data'    => null,
-            ], 401);
+            ], 400);
         }
     }
 }

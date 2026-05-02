@@ -86,4 +86,85 @@ class UserRepository implements UserRepositoryInterface
 
         return (bool) $user->delete();
     }
+
+    /**
+     * Admin search users.
+     */
+    public function search(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->adminSearch($filters, $perPage);
+    }
+
+    public function adminSearch(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = $this->model->newQuery();
+
+        // Tìm theo tên hoặc email
+        if (!empty($filters['keyword'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('full_name', 'like', "%{$filters['keyword']}%")
+                    ->orWhere('email', 'like', "%{$filters['keyword']}%");
+            });
+        }
+        if (!empty($filters['mssv'])) {
+            $query->where('mssv', 'like', "%{$filters['mssv']}%");
+        }
+        if (!empty($filters['class_name'])) {
+            $query->where('class_name', 'like', "%{$filters['class_name']}%");
+        }
+        if (!empty($filters['faculty'])) {
+            $query->where('faculty', 'like', "%{$filters['faculty']}%");
+        }
+
+        // Admin-only filters
+        if (!empty($filters['role'])) {
+            $query->where('role', $filters['role']);
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        return $query->latest()->paginate($perPage);
+    }
+
+    public function getAllForExport(array $filters = []): Collection
+    {
+        $query = $this->model->newQuery();
+
+        if (!empty($filters['keyword'])) {
+            $keyword = $filters['keyword'];
+            $query->where(function ($q) use ($keyword) {
+                $q->where('full_name', 'like', "%{$keyword}%")
+                    ->orWhere('email', 'like', "%{$keyword}%");
+            });
+        }
+
+        if (!empty($filters['mssv'])) {
+            $query->where('mssv', 'like', "%{$filters['mssv']}%");
+        }
+
+        if (!empty($filters['class_name'])) {
+            $query->where('class_name', 'like', "%{$filters['class_name']}%");
+        }
+
+        if (!empty($filters['faculty'])) {
+            $query->where('faculty', 'like', "%{$filters['faculty']}%");
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['role'])) {
+            $query->where('role', $filters['role']);
+        }
+
+        return $query->orderBy('full_name')->get();
+    }
+
+    public function countUsers()
+    {
+        return $this->model->where('status', User::STATUS_ACTIVE)->count();
+    }
 }

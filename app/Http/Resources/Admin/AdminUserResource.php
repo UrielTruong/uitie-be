@@ -1,20 +1,13 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @mixin \App\Models\User
- */
-class UserResource extends JsonResource
+/** @mixin \App\Models\User */
+class AdminUserResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
@@ -28,8 +21,9 @@ class UserResource extends JsonResource
             'academic_year' => $this->academic_year,
             'role'          => $this->role,
             'status'        => $this->status,
+            'status_reason' => $this->status_reason, // admin cần biết lý do khóa tài khoản
             'created_at'    => $this->created_at?->toISOString(),
-
+            'updated_at'    => $this->updated_at?->toISOString(),
         ];
     }
 }
