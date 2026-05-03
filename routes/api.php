@@ -18,7 +18,6 @@ Route::post('reset-password', [UserController::class, 'resetPassword']);
 // 2. PROTECTED ROUTES (Yêu cầu đăng nhập JWT)
 Route::middleware('auth.jwt')->group(function () {
 
-    //only need 1 api to manage admin and user (SUPER ADMIN)
     //route for SUPER ADMIN
     Route::middleware('auth.role:SUPER_ADMIN')->group(function () {
         Route::prefix('super-admin')->group(function () {
@@ -39,10 +38,10 @@ Route::middleware('auth.jwt')->group(function () {
 
         Route::prefix('admin')->group(function () {
             // --- QUẢN LÝ BÀI ĐĂNG (Đã refactor theo flow của Manage Users) ---
-            
-            // Lấy toàn bộ danh sách
+
+            // Lấy list posts
             Route::get('post', [AdminPostController::class, 'getListPost']);
-            
+
             // Duyệt bài
             Route::put('post/{id}/validate', [AdminPostController::class, 'validatePost']);
 

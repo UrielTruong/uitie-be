@@ -55,8 +55,16 @@ class PostController extends Controller
                 'message' => 'Không tìm thấy bài viết.',
             ], 404);
         }
+        //only pending posts can be validated
+        if ($post->status !== Post::STATUS_PENDING) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Only pending posts can be validated.',
+            ], 422);
+        }
 
         try {
+
             $updatedPost = $this->postRepository->update($id, [
                 'status'        => $request->status,
                 'reject_reason' => ($request->status === 'Rejected') ? $request->reject_reason : null,
