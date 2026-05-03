@@ -38,15 +38,13 @@ Route::middleware('auth.jwt')->group(function () {
     Route::middleware('auth.role:ADMIN,SUPER_ADMIN')->group(function () {
 
         Route::prefix('admin')->group(function () {
-            // --- KIỂM DUYỆT BÀI ĐĂNG ---
-            Route::get('posts/pending', [AdminPostController::class, 'getPendingPosts']);
-            Route::post('posts/{id}/approve', [AdminPostController::class, 'approvePost']);
-
-            // Mới thêm: Xóa bài viết vi phạm
-            Route::delete('posts/{id}', [AdminPostController::class, 'deletePost']);
-
-            // Quản lý bài viết
-            Route::get('post/search', [AdminPostController::class, 'searchPost']);
+            // --- QUẢN LÝ BÀI ĐĂNG (Đã refactor theo flow của Manage Users) ---
+            
+            // Lấy toàn bộ danh sách
+            Route::get('post', [AdminPostController::class, 'getListPost']);
+            
+            // Duyệt bài
+            Route::put('post/{id}/validate', [AdminPostController::class, 'validatePost']);
 
             //Quản lý báo cáo vi phạm
             Route::get('report', [AdminReportController::class, 'searchReport']);
