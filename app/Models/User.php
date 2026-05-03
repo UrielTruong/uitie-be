@@ -15,9 +15,9 @@ class User extends Authenticatable
      */
 
     // Constants để quản lý dữ liệu nhất quán
-    const ROLE_SUPER_ADMIN = 'SUPER_ADMIN';
-    const ROLE_ADMIN       = 'ADMIN';
-    const ROLE_STUDENT     = 'STUDENT';
+    const ROLE_SUPER_ADMIN = 'Super Admin';
+    const ROLE_ADMIN       = 'Admin';
+    const ROLE_STUDENT     = 'Student';
 
     const STATUS_INACTIVE  = 'Inactive';
     const STATUS_ACTIVE    = 'Active';

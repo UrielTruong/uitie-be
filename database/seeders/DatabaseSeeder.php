@@ -18,26 +18,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
 
-        // 'email',
-        // 'password',
-        // 'full_name',
-        // 'mssv',
-        // 'phone_number',
-        // 'role',
-        // 'status',
-        // 'status_reason',
-        // 'faculty',
-        // 'class_name',
-        // 'academic_year',
-        // User::factory()->create([
-        //     'full_name' => 'Super Admin',
-        //     'email' => 'superadmin@ms.uit.edu.vn',
-        //     'role' => User::ROLE_SUPER_ADMIN,
-        //     'status' => User::STATUS_ACTIVE,
-        //     'password' => Hash::make('`12345678`'),
-        // ]);
+        User::factory()->create([
+            'full_name' => 'Super Admin',
+            'email' => 'a@ms.uit.edu.vn',
+            'role' => User::ROLE_SUPER_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+            'password' => Hash::make('12345678'),
+        ]);
 
         // User::factory()->create([
         //     'full_name' => 'Admin',
@@ -80,10 +68,10 @@ class DatabaseSeeder extends Seeder
         //     'description' => 'Đời sống sinh viên: canteen, ký túc xá, câu lạc bộ, hoạt động ngoại khóa và các cảnh báo học vụ',
         // ]);
 
-        // Report nhắm vào Post
-        Report::factory()->count(10)->create();
+        // // Report nhắm vào Post
+        // Report::factory()->count(10)->create();
 
-        // Report nhắm vào User
-        Report::factory()->forUser()->count(5)->create();
+        // // Report nhắm vào User
+        // Report::factory()->forUser()->count(5)->create();
     }
 }

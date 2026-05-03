@@ -19,7 +19,7 @@ Route::post('reset-password', [UserController::class, 'resetPassword']);
 Route::middleware('auth.jwt')->group(function () {
 
     //route for SUPER ADMIN
-    Route::middleware('auth.role:SUPER_ADMIN')->group(function () {
+    Route::middleware('auth.role:Super Admin')->group(function () {
         Route::prefix('super-admin')->group(function () {
 
             // Manage users
@@ -34,7 +34,7 @@ Route::middleware('auth.jwt')->group(function () {
     });
 
     //route for ADMIN
-    Route::middleware('auth.role:ADMIN,SUPER_ADMIN')->group(function () {
+    Route::middleware('auth.role:Admin,Super Admin')->group(function () {
 
         Route::prefix('admin')->group(function () {
             // --- QUẢN LÝ BÀI ĐĂNG (Đã refactor theo flow của Manage Users) ---
