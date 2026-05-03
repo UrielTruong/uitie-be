@@ -23,4 +23,7 @@ interface PostRepositoryInterface
     public function countPostsByCategory();
 
     public function countPosts();
+
+    //add thêm vì bên PostController có gọi $this->postRepository->paginate($perPage)
+    public function paginate(int $perPage);
 }

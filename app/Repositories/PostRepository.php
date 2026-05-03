@@ -115,4 +115,9 @@ class PostRepository implements PostRepositoryInterface
     {
         return Post::where('status', Post::STATUS_PENDING)->count();
     }
+
+    public function paginate(int $perPage = 15): LengthAwarePaginator
+    {
+        return Post::latest()->paginate($perPage);
+    }
 }

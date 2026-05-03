@@ -18,7 +18,6 @@ Route::post('reset-password', [UserController::class, 'resetPassword']);
 // 2. PROTECTED ROUTES (Yêu cầu đăng nhập JWT)
 Route::middleware('auth.jwt')->group(function () {
 
-    //only need 1 api to manage admin and user (SUPER ADMIN)
     //route for SUPER ADMIN
     Route::middleware('auth.role:SUPER_ADMIN')->group(function () {
         Route::prefix('super-admin')->group(function () {
@@ -38,15 +37,13 @@ Route::middleware('auth.jwt')->group(function () {
     Route::middleware('auth.role:ADMIN,SUPER_ADMIN')->group(function () {
 
         Route::prefix('admin')->group(function () {
-            // --- KIỂM DUYỆT BÀI ĐĂNG ---
-            Route::get('posts/pending', [AdminPostController::class, 'getPendingPosts']);
-            Route::post('posts/{id}/approve', [AdminPostController::class, 'approvePost']);
+            // --- QUẢN LÝ BÀI ĐĂNG (Đã refactor theo flow của Manage Users) ---
 
-            // Mới thêm: Xóa bài viết vi phạm
-            Route::delete('posts/{id}', [AdminPostController::class, 'deletePost']);
+            // Lấy list posts
+            Route::get('post', [AdminPostController::class, 'getListPost']);
 
-            // Quản lý bài viết
-            Route::get('post/search', [AdminPostController::class, 'searchPost']);
+            // Duyệt bài
+            Route::put('post/{id}/validate', [AdminPostController::class, 'validatePost']);
 
             //Quản lý báo cáo vi phạm
             Route::get('report', [AdminReportController::class, 'searchReport']);
