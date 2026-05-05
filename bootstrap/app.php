@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.jwt'  => AuthenticateJwt::class,
             'auth.role' => AuthorizeRole::class,
         ]);
+        $middleware->append(\App\Http\Middleware\LogActivity::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
