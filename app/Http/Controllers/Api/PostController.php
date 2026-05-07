@@ -49,7 +49,7 @@ class PostController extends Controller
     public function create(CreatePostRequest $request): JsonResponse
     {
         $post = $this->postRepository->create([
-            'user_id'     => $request->user_id,
+            'user_id'     => $request->attributes->get('user_id'),
             'content'     => $request->content,
             'visibility'  => $request->visibility ?? Post::VISIBILITY_PUBLIC,
             'category_id' => $request->category_id,
@@ -70,7 +70,7 @@ class PostController extends Controller
     {
         $post = $this->postRepository->findById($id);
 
-        if ((string) $post->user_id !== (string) $request->user_id) {
+        if ((string) $post->user_id !== (string) $request->attributes->get('user_id')) {
             return response()->json([
                 'status'  => false,
                 'message' => 'Forbidden: you do not own this post',
@@ -97,8 +97,8 @@ class PostController extends Controller
         $post = $this->postRepository->findById($id);
 
         // Chỉ người tạo hoặc Admin mới được xóa
-        $isOwner = (string) $post->user_id === (string) $request->user_id;
-        $isAdmin = in_array($request->user_role, ['Admin', 'Super Admin']);
+        $isOwner = (string) $post->user_id === (string) $request->attributes->get('user_id');
+        $isAdmin = in_array($request->attributes->get('user_role'), ['Admin', 'Super Admin']);
 
         if (!$isOwner && !$isAdmin) {
             return response()->json([

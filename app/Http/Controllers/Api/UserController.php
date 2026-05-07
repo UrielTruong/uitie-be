@@ -48,7 +48,7 @@ class UserController extends Controller
      * 
      * POST /api/users
      */
-    public function createNew(CreateNewUserRequest $request): UserResource
+    public function createNew(Request $request): UserResource
     {
         $user = $this->users->create($request->validated());
 
@@ -57,7 +57,7 @@ class UserController extends Controller
 
     public function changePassword(ChangePasswordRequest $request): JsonResponse
     {
-        $userId = $request->user_id;
+        $userId = $request->attributes->get('user_id');
         $currentPassword = $request->current_password;
         $newPassword = $request->new_password;
 
