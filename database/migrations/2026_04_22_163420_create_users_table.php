@@ -44,11 +44,6 @@ return new class extends Migration
          * Filtered Index cho MSSQL:
          * Cho phép nhiều dòng có MSSV là NULL, nhưng nếu có giá trị thì phải Unique.
          */
-        DB::statement("
-            CREATE UNIQUE NONCLUSTERED INDEX UX_users_mssv_not_null
-            ON users(mssv)
-            WHERE mssv IS NOT NULL
-        ");
     }
 
     /**
