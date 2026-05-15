@@ -84,6 +84,8 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('change-password', [UserController::class, 'changePassword']);
         //search user
         Route::get('/search', [UserController::class, 'search']);
+        //report user
+        Route::post('/{id}/report', [StudentReportController::class, 'reportUser']);
     });
 
     //route for POST - FEED
