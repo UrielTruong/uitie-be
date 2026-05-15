@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Api\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Api\ReportController as StudentReportController;
 use App\Http\Controllers\Api\Admin\StatisticController as AdminStatisticController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\PostController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\AuthenticatedController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserController;
+
 
 Route::post('login', [AuthenticatedController::class, 'login'])
     ->name('login');
@@ -84,7 +86,6 @@ Route::middleware('auth.jwt')->group(function () {
         Route::get('/search', [UserController::class, 'search']);
     });
 
-
     //route for POST - FEED
     Route::prefix('post')->group(function () {
         Route::get('/', [PostController::class, 'getList']);
@@ -92,5 +93,6 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('/', [PostController::class, 'create']);
         Route::put('/{id}', [PostController::class, 'update']);
         Route::delete('/{id}', [PostController::class, 'destroy']);
+        Route::post('/{id}/report', [StudentReportController::class, 'reportPost']);
     });
 });

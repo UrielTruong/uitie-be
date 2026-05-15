@@ -72,4 +72,12 @@ class ReportRepository implements ReportRepositoryInterface
     {
         return Report::where('status', Report::STATUS_PENDING)->count();
     }
+
+    /**
+     * Tạo báo cáo vi phạm bài viết hoặc người dùng.
+     */
+    public function create(array $data): Report
+    {
+        return Report::create($data);
+    }
 }
