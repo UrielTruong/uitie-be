@@ -1,14 +1,17 @@
 <?php
 
-use App\Http\Controllers\Api\Admin\PostController as AdminPostController;
-use App\Http\Controllers\Api\Admin\ReportController as AdminReportController;
-use App\Http\Controllers\Api\Admin\StatisticController as AdminStatisticController;
-use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Admin\PostController as AdminPostController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Admin\StatisticController as AdminStatisticController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\AuthenticatedController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\UserController;
+
+
 
 Route::post('login', [AuthenticatedController::class, 'login'])
     ->name('login');
@@ -86,5 +89,10 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('/', [PostController::class, 'create']);
         Route::put('/{id}', [PostController::class, 'update']);
         Route::delete('/{id}', [PostController::class, 'destroy']);
+    });
+
+    //route for ATTACHMENT
+    Route::prefix('attachment')->group(function () {
+        Route::post('/presign', [AttachmentController::class, 'presign']);
     });
 });
