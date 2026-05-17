@@ -7,7 +7,6 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\AuthenticatedController;
-use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -80,7 +79,7 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('change-password', [UserController::class, 'changePassword']);
         //search user
         Route::get('/search', [UserController::class, 'search']);
-         //get profile
+        //get profile
         Route::get('/profile', [ProfileController::class, 'getProfile']);
         //update profile
         Route::put('/profile', [ProfileController::class, 'updateProfile']);
