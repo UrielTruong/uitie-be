@@ -114,4 +114,24 @@ class PostController extends Controller
             'message' => 'Post deleted successfully',
         ]);
     }
+
+    // GET /api/users/{id}/posts - Lấy danh sách bài viết của 1 user
+    public function getUserPosts(int $id, \Illuminate\Http\Request $request): PostCollection
+    {
+        $perPage = $request->integer('per_page', 15);
+        $currentUserId = $request->attributes->get('user_id');
+
+        $query = Post::with(['user', 'category'])
+            ->where('user_id', $id);
+
+        // Chỉ chủ sở hữu bài viết mới xem được bài viết private hoặc pending
+        if ((string) $id !== (string) $currentUserId) {
+            $query->where('visibility', Post::VISIBILITY_PUBLIC)
+                  ->where('status', Post::STATUS_ACCEPTED);
+        }
+
+        $posts = $query->latest()->paginate($perPage);
+
+        return new PostCollection($posts);
+    }
 }
