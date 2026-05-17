@@ -14,6 +14,7 @@ class Attachment extends Model
     protected $fillable = [
         'file_url',
         'file_type',
+        'file_name'
     ];
 
     public function posts(): BelongsToMany
