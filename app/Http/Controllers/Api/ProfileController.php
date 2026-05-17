@@ -19,7 +19,7 @@ class ProfileController extends Controller
         $targetUserId = $request->query('user_id');
         $userIdToFetch = $targetUserId ? $targetUserId : $request->attributes->get('user_id');
         
-        $user = User::find($userIdToFetch);
+        $user = User::withCount(['followers', 'following'])->find($userIdToFetch);
 
         if (!$user) {
             return response()->json([
