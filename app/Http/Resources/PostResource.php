@@ -35,7 +35,8 @@ class PostResource extends JsonResource
                         'id'        => $a->id,
                         'file_name' => $a->file_name,
                         'file_url'  => $a->file_url,
-                        'view_url'  => $svc->getViewUrl($a->file_url),  // presigned, 60-min valid
+                        'view_url'  => $svc->getViewUrl($a->file_url),
+                        'file_type' => $a->file_type,
                     ]);
                 }
             ),
