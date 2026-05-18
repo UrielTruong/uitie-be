@@ -182,7 +182,7 @@ class PostController extends Controller
         $perPage = $request->integer('per_page', 15);
         $currentUserId = $request->attributes->get('user_id');
 
-        $query = Post::with(['user', 'category'])
+        $query = Post::with(['user', 'category', 'attachments'])
             ->where('user_id', $id);
 
         // Chỉ chủ sở hữu bài viết mới xem được bài viết private hoặc pending
