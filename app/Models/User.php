@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
+
     /**
      * Không cần $primaryKey nữa vì mặc định đã là 'id'
      */
@@ -74,13 +76,25 @@ class User extends Authenticatable
         return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN]);
     }
 
-    public function followers()
+    // =========================================================================
+    // RELATIONS (PHÂN HỆ KẾT NỐI CỘNG ĐỒNG)
+    // =========================================================================
+
+    /**
+     * Danh sách những sinh viên đang bấm Theo dõi tài khoản này
+     */
+    public function followers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'follows', 'following_id', 'follower_id');
+        return $this->belongsToMany(User::class, 'follows', 'following_id', 'follower_id')
+                    ->withTimestamps();
     }
 
-    public function following()
+    /**
+     * Danh sách những sinh viên mà tài khoản này đang bấm Theo dõi
+     */
+    public function following(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id');
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id')
+                    ->withTimestamps();
     }
 }
