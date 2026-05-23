@@ -41,7 +41,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/') . '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
@@ -58,6 +58,17 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
             'report' => false,
+        ],
+
+        'minio' => [
+            'driver'                  => 's3',
+            'key'                     => env('MINIO_KEY'),
+            'secret'                  => env('MINIO_SECRET'),
+            'region'                  => env('MINIO_REGION', 'us-east-1'),
+            'bucket'                  => env('MINIO_BUCKET'),
+            'endpoint'                => env('MINIO_ENDPOINT', 'http://localhost:900'),
+            'use_path_style_endpoint' => env('MINIO_USE_PATH_STYLE_ENDPOINT', true),
+            'throw'                   => true,
         ],
 
     ],
