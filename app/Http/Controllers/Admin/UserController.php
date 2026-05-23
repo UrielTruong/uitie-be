@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Http\Requests\Admin\AdminSearchUserRequest;
 use App\Http\Requests\Admin\ExportUserPdfRequest;
 use App\Http\Requests\Admin\CreateNewUserRequest;
@@ -120,5 +121,64 @@ class UserController extends Controller
         $filename = 'danh-sach-nguoi-dung-' . Carbon::now()->format('Ymd-His') . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Khóa tài khoản người dùng kèm lý do nhập tay.
+     */
+    public function lockUser(Request $request, $id): JsonResponse
+    {
+        $user = $this->users->findById($id);
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Không tìm thấy người dùng hệ thống.',
+            ], 404);
+        }
+
+        $request->validate([
+            'reason' => 'required|string|min:5'
+        ], [
+            'reason.required' => 'Vui lòng cung cấp lý do khóa tài khoản.',
+            'reason.min' => 'Lý do khóa tài khoản quá ngắn, vui lòng nhập chi tiết hơn (tối thiểu 5 ký tự).'
+        ]);
+
+        $updated = $this->users->update($id, [
+            'status' => User::STATUS_LOCKED,
+            'status_reason' => $request->reason,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Đã khóa tài khoản thành công.',
+            'data' => new AdminUserResource($updated)
+        ], 200);
+    }
+
+    /**
+     * Mở khóa tài khoản người dùng.
+     */
+    public function unlockUser($id): JsonResponse
+    {
+        $user = $this->users->findById($id);
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Không tìm thấy người dùng hệ thống.',
+            ], 404);
+        }
+
+        $updated = $this->users->update($id, [
+            'status' => User::STATUS_ACTIVE,
+            'status_reason' => null,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Đã mở khóa tài khoản thành công.',
+            'data' => new AdminUserResource($updated)
+        ], 200);
     }
 }

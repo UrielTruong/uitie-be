@@ -34,6 +34,7 @@ Route::middleware('auth.jwt')->group(function () {
             Route::put('user/{id}', [AdminUserController::class, 'updateUser']);
 
             Route::delete('user/{id}', [AdminUserController::class, 'deleteUser']);
+            
         });
     });
 
@@ -41,6 +42,11 @@ Route::middleware('auth.jwt')->group(function () {
     Route::middleware('auth.role:Admin,Super Admin')->group(function () {
 
         Route::prefix('admin')->group(function () {
+            
+        // --- QUẢN LÝ TÀI KHOẢN (Lock/Unlock) ---
+            Route::put('user/{id}/lock', [AdminUserController::class, 'lockUser']);
+            Route::put('user/{id}/unlock', [AdminUserController::class, 'unlockUser']);
+
             // --- QUẢN LÝ BÀI ĐĂNG (Đã refactor theo flow của Manage Users) ---
 
             // Lấy list posts

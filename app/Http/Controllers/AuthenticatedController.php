@@ -26,6 +26,16 @@ class AuthenticatedController extends Controller
                 ], 400);
             }
 
+            // --- KIỂM TRA TÀI KHOẢN BỊ KHÓA ---
+            if ($user->status === User::STATUS_LOCKED) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Tài khoản của bạn đã bị khóa. Lý do: ' . ($user->status_reason ?? 'Vi phạm quy định hệ thống.'),
+                    'data'    => null,
+                ], 403);
+            }
+            // ---------------------------------------
+
             $token = $this->jwtService->encode($user);
 
             return new LoginResource($user, $token);
