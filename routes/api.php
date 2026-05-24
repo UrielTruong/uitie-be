@@ -110,7 +110,8 @@ Route::middleware('auth.jwt')->group(function () {
         Route::put('/{id}', [PostController::class, 'update']);
         Route::delete('/{id}', [PostController::class, 'destroy']);
         Route::post('/{id}/report', [ReportController::class, 'reportPost']);
-        Route::post('/{id}/report', [ReportController::class, 'reportPost']);
+        Route::post('/{id}/like', [PostController::class, 'toggleLike']);
+        Route::post('/{id}/share', [PostController::class, 'share']);
     });
 
     //route for COMMENT
