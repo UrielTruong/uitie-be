@@ -293,16 +293,22 @@ class PostController extends Controller
         }
 
         // Tạo một bài viết mới (share) trỏ đến parent_post_id
-        $sharedPost = clone $post;
-        $this->postRepository->create([
+        $newPost = $this->postRepository->create([
             'user_id'        => $userId,
             'parent_post_id' => $id,
-            'content'        => null,
+            'category_id'    => $post->category_id,
+            'content'        => $request->content ?? $post->content,
             'visibility'     => Post::VISIBILITY_PUBLIC,
             'status'         => Post::STATUS_ACCEPTED, // Share mặc định duyệt luôn
         ]);
 
-        $sharesCount = clone Post::where('parent_post_id', $id)->count();
+        // Copy file đính kèm (attachments) từ bài viết gốc sang bài share
+        $post->load('attachments');
+        if ($post->attachments->isNotEmpty()) {
+            $newPost->attachments()->attach($post->attachments->pluck('id')->toArray());
+        }
+
+        $sharesCount = Post::where('parent_post_id', $id)->count();
 
         return response()->json([
             'status'  => true,
