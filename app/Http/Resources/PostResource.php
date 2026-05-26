@@ -18,6 +18,7 @@ class PostResource extends JsonResource
             'is_edited'   => $this->is_edited,
             'updated_at'  => $this->updated_at,
             'created_at'  => $this->created_at,
+            'comments'    => $this->comments_count ?? $this->comments()->count(),
             'author'      => [
                 'id'        => $this->user->id,
                 'full_name' => $this->user->full_name,

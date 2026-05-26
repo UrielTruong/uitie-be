@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\StatisticController as AdminStatisticController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\AuthenticatedController;
 use App\Http\Controllers\ProfileController;
@@ -104,6 +105,11 @@ Route::middleware('auth.jwt')->group(function () {
         Route::put('/{id}', [PostController::class, 'update']);
         Route::delete('/{id}', [PostController::class, 'destroy']);
     });
+
+    //route for COMMENT
+    Route::get('/posts/{postId}/comments', [CommentController::class, 'getByPost']);
+    Route::post('/comments', [CommentController::class, 'store']);
+    Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
 
     //route for ATTACHMENT
     Route::prefix('attachment')->group(function () {
