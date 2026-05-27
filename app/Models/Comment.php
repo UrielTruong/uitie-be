@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Comment extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'post_id',
         'user_id',
@@ -16,28 +16,23 @@ class Comment extends Model
         'content',
     ];
 
-    public function post(): BelongsTo
-    {
-        return $this->belongsTo(Post::class);
-    }
-
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function parent(): BelongsTo
+    public function post()
+    {
+        return $this->belongsTo(Post::class);
+    }
+
+    public function parent()
     {
         return $this->belongsTo(Comment::class, 'parent_comment_id');
     }
 
-    public function replies(): HasMany
+    public function replies()
     {
         return $this->hasMany(Comment::class, 'parent_comment_id');
-    }
-
-    public function attachments(): BelongsToMany
-    {
-        return $this->belongsToMany(Attachment::class, 'comment_attachments');
     }
 }
