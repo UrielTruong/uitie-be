@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\StatisticController as AdminStatisticController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PostController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+
 
 
 
@@ -35,7 +37,6 @@ Route::middleware('auth.jwt')->group(function () {
             Route::put('user/{id}', [AdminUserController::class, 'updateUser']);
 
             Route::delete('user/{id}', [AdminUserController::class, 'deleteUser']);
-            
         });
     });
 
@@ -43,8 +44,8 @@ Route::middleware('auth.jwt')->group(function () {
     Route::middleware('auth.role:Admin,Super Admin')->group(function () {
 
         Route::prefix('admin')->group(function () {
-            
-        // --- QUẢN LÝ TÀI KHOẢN (Lock/Unlock) ---
+
+            // --- QUẢN LÝ TÀI KHOẢN (Lock/Unlock) ---
             Route::put('user/{id}/lock', [AdminUserController::class, 'lockUser']);
             Route::put('user/{id}/unlock', [AdminUserController::class, 'unlockUser']);
 
@@ -104,6 +105,7 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('/', [PostController::class, 'create']);
         Route::put('/{id}', [PostController::class, 'update']);
         Route::delete('/{id}', [PostController::class, 'destroy']);
+        Route::post('/{id}/report', [ReportController::class, 'reportPost']);
     });
 
     //route for COMMENT
