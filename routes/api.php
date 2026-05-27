@@ -17,6 +17,7 @@ use App\Http\Controllers\UserController;
 
 
 
+
 Route::post('login', [AuthenticatedController::class, 'login'])
     ->name('login');
 
@@ -88,11 +89,14 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('change-password', [UserController::class, 'changePassword']);
         //search user
         Route::get('/search', [UserController::class, 'search']);
-        //get profile
-        Route::get('/profile', [ProfileController::class, 'getProfile']);
-        //update profile
-        Route::put('/profile', [ProfileController::class, 'updateProfile']);
+        //report user
+        Route::post('/{id}/report', [ReportController::class, 'reportUser']);
     });
+
+    //get profile
+    Route::get('/profile', [ProfileController::class, 'getProfile']);
+    //update profile
+    Route::put('/profile', [ProfileController::class, 'updateProfile']);
 
     // Lấy danh sách bài viết của một user cụ thể
     Route::get('/users/{id}/posts', [PostController::class, 'getUserPosts']);
@@ -105,6 +109,7 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('/', [PostController::class, 'create']);
         Route::put('/{id}', [PostController::class, 'update']);
         Route::delete('/{id}', [PostController::class, 'destroy']);
+        Route::post('/{id}/report', [ReportController::class, 'reportPost']);
         Route::post('/{id}/report', [ReportController::class, 'reportPost']);
     });
 
