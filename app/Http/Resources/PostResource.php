@@ -23,6 +23,7 @@ class PostResource extends JsonResource
             'shares'      => $this->shares ?? 0,
             'comments'    => $this->comments_count ?? $this->comments()->count(),
             'parent_post' => $this->whenLoaded('parentPost', fn() => new PostResource($this->parentPost)),
+            'shared_post' => $this->shared_post ? new PostResource($this->shared_post) : null,
             'author'      => [
                 'id'        => $this->user->id,
                 'full_name' => $this->user->full_name,

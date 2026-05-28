@@ -62,6 +62,11 @@ class PostController extends Controller
             $post->setAttribute('likes', $likesCounts[$post->id] ?? 0);
             $post->setAttribute('liked', in_array($post->id, $userLikes));
             $post->setAttribute('shares', $sharesCounts[$post->id] ?? 0);
+
+            // Đảm bảo parentPost được đính kèm vào JSON trả về
+            if ($post->relationLoaded('parentPost') && $post->parentPost) {
+                $post->setAttribute('shared_post', $post->parentPost);
+            }
         }
 
         return $posts;
@@ -72,6 +77,13 @@ class PostController extends Controller
     {
         $perPage = $request->integer('per_page', 15);
         $posts = $this->postRepository->getFeed($perPage);
+
+        // Load dữ liệu bài viết gốc để frontend có thể hiển thị Share UI
+        if ($posts instanceof \Illuminate\Pagination\AbstractPaginator) {
+            $posts->getCollection()->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
+        } else {
+            $posts->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
+        }
 
         $this->attachPostStats($posts, $request->attributes->get('user_id'));
 
@@ -85,6 +97,13 @@ class PostController extends Controller
         $perPage = $request->integer('per_page', 15);
 
         $posts = $this->postRepository->adminSearch($filters, $perPage);
+
+        if ($posts instanceof \Illuminate\Pagination\AbstractPaginator) {
+            $posts->getCollection()->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
+        } else {
+            $posts->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
+        }
+
         $this->attachPostStats($posts, $request->attributes->get('user_id'));
 
         return new PostCollection($posts);
@@ -224,7 +243,7 @@ class PostController extends Controller
         $perPage = $request->integer('per_page', 15);
         $currentUserId = $request->attributes->get('user_id');
 
-        $query = Post::with(['user', 'category', 'attachments'])
+        $query = Post::with(['user', 'category', 'attachments', 'parentPost.user', 'parentPost.attachments', 'parentPost.category'])
             ->where('user_id', $id);
 
         // Chỉ chủ sở hữu bài viết mới xem được bài viết private hoặc pending
@@ -297,16 +316,10 @@ class PostController extends Controller
             'user_id'        => $userId,
             'parent_post_id' => $id,
             'category_id'    => $post->category_id,
-            'content'        => $request->content ?? $post->content,
+            'content'        => $request->content, // Không copy nội dung cũ để tránh bị lặp lại ở khung Share
             'visibility'     => Post::VISIBILITY_PUBLIC,
             'status'         => Post::STATUS_ACCEPTED, // Share mặc định duyệt luôn
         ]);
-
-        // Copy file đính kèm (attachments) từ bài viết gốc sang bài share
-        $post->load('attachments');
-        if ($post->attachments->isNotEmpty()) {
-            $newPost->attachments()->attach($post->attachments->pluck('id')->toArray());
-        }
 
         $sharesCount = Post::where('parent_post_id', $id)->count();
 
