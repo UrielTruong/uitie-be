@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\StatisticController as AdminStatisticController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\FollowSuggestionController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\CommentController;
@@ -101,6 +103,9 @@ Route::middleware('auth.jwt')->group(function () {
     // Lấy danh sách bài viết của một user cụ thể
     Route::get('/users/{id}/posts', [PostController::class, 'getUserPosts']);
 
+    // Gợi ý follow
+    Route::get('/users/suggested-follows', [FollowSuggestionController::class, 'getSuggestedFollows']);
+
 
     //route for POST - FEED
     Route::prefix('post')->group(function () {
@@ -117,6 +122,11 @@ Route::middleware('auth.jwt')->group(function () {
     Route::get('/posts/{postId}/comments', [CommentController::class, 'getByPost']);
     Route::post('/comments', [CommentController::class, 'store']);
     Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
+
+    //route for CATEGORY
+    Route::prefix('categories')->group(function () {
+        Route::get('/trending', [CategoryController::class, 'getTrending']);
+    });
 
     //route for ATTACHMENT
     Route::prefix('attachment')->group(function () {
