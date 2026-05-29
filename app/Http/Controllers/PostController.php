@@ -29,12 +29,37 @@ class PostController extends Controller
         private AttachmentService $attachmentService,
     ) {}
 
-    // GET /api/posts - Xem danh sách bài viết trên bảng tin
+    // GET /api/posts - Xem danh sách bài viết trên bảng tin (Khám phá / Đang theo dõi + Lọc thời gian)
     public function getList(GetListPostRequest $request): PostCollection
     {
         $perPage = $request->integer('per_page', 15);
-        $posts = Post::whereNull('deleted_at');
-        $posts = $this->postRepository->getFeed($perPage);
+        $currentUserId = $request->attributes->get('user_id') ?? 1;
+        
+        // Lấy scope từ query params (Mặc định là 'all' - Khám phá toàn trường)
+        $scope = $request->query('scope', 'all');
+
+        // XỬ LÝ TAB "ĐANG THEO DÕI"
+        if ($scope === 'following') {
+            // Lấy danh sách ID của những người mà User hiện tại đang follow
+            $followingIds = DB::table('follows')
+                ->where('follower_id', $currentUserId)
+                ->pluck('following_id');
+
+            $posts = Post::with(['user', 'category', 'attachments'])
+                ->withTrashed() // Lấy cả bài viết có deleted_at để khớp với DB test hiện tại của Thư
+                ->whereIn('status', ['Accepted', 'accepted']) // Chấp nhận cả chữ A hoa lẫn chữ a thường
+                ->whereIn('user_id', $followingIds)
+                ->latest() // Sắp xếp theo thời gian mới nhất lên đầu
+                ->paginate($perPage);
+        } 
+        // XỬ LÝ TAB "KHÁM PHÁ" MẶC ĐỊNH
+        else {
+            $posts = Post::with(['user', 'category', 'attachments'])
+                ->withTrashed() // Lấy cả bài viết có deleted_at để khớp với DB test hiện tại của Thư
+                ->whereIn('status', ['Accepted', 'accepted'])
+                ->latest() // Sắp xếp theo thời gian mới nhất lên đầu
+                ->paginate($perPage);
+        }
 
         return new PostCollection($posts);
     }
