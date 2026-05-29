@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api; 
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
@@ -33,7 +33,7 @@ class ReportController extends Controller
             'reason.min' => 'Nội dung báo cáo quá ngắn, vui lòng mô tả chi tiết hơn.'
         ]);
 
-        $studentId = $request->attributes->get('user_id'); 
+        $studentId = $request->attributes->get('user_id');
 
         $report = $this->reports->create([
             'reporter_id'      => $studentId,
@@ -62,7 +62,7 @@ class ReportController extends Controller
             return response()->json(['status' => false, 'message' => 'Người dùng không tồn tại.'], 404);
         }
 
-        $studentId = $request->attributes->get('user_id'); 
+        $studentId = $request->attributes->get('user_id');
 
         // 2. Không cho phép sinh viên tự báo cáo chính mình
         if ($studentId == $userId) {
