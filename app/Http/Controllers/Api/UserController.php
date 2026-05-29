@@ -142,4 +142,46 @@ class UserController extends Controller
 
         return new UserCollection($users);
     }
+
+    /**
+     * Lấy thông tin hồ sơ của chính người dùng đang đăng nhập
+     * GET /api/user/profile
+     */
+    public function profile(Request $request): JsonResponse
+    {
+        // Lấy userId từ attribute do middleware JWT bọc sẵn giống hàm changePassword
+        $userId = $request->attributes->get('user_id');
+        
+        // Tận dụng Repository $this->users của anh Trí để tìm user trong DB
+        $user = $this->users->findById($userId);
+
+        if (! $user) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        // Trả về dữ liệu user chuẩn JSON
+        return response()->json($user, 200);
+    }
+
+    /**
+     * Lấy thông tin chi tiết của một user khác dựa trên ID truyền qua URL
+     * GET /api/user/{id}
+     */
+    public function show(string|int $id): JsonResponse
+    {
+        // Dùng Repository tìm kiếm user theo ID
+        $user = $this->users->findById($id);
+
+        if (! $user) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        return response()->json($user, 200);
+    }
 }

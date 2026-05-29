@@ -86,6 +86,11 @@ Route::middleware('auth.jwt')->group(function () {
         Route::get('/search', [UserController::class, 'search']);
         //report user
         Route::post('/{id}/report', [StudentReportController::class, 'reportUser']);
+        //get my user profile
+        Route::get('profile', [UserController::class, 'profile']);
+        //get other users profile
+        Route::get('/{id}', [UserController::class, 'show']);
+
     });
 
     //route for POST - FEED
