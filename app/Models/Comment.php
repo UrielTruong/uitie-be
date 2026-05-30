@@ -35,4 +35,10 @@ class Comment extends Model
     {
         return $this->hasMany(Comment::class, 'parent_comment_id');
     }
+
+public function attachments()
+{
+    return $this->belongsToMany(\App\Models\Attachment::class, 'comment_attachments')->withTimestamps();
+}
+
 }
