@@ -13,6 +13,7 @@ use App\Http\Resources\PostCollection;
 use App\Http\Resources\PostResource;
 use App\Models\Attachment;
 use App\Models\Post;
+use App\Models\Like;
 use App\Repositories\Contracts\PostRepositoryInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -29,12 +30,94 @@ class PostController extends Controller
         private AttachmentService $attachmentService,
     ) {}
 
+    // GET /api/posts - Xem danh sách bài viết trên bảng tin (Khám phá / Đang theo dõi + Lọc thời gian)
+    public function getList(GetListPostRequest $request): PostCollection
+    {
+        $perPage = $request->integer('per_page', 15);
+        $currentUserId = $request->attributes->get('user_id') ?? 1;
+
+        // Lấy scope từ query params (Mặc định là 'all' - Khám phá toàn trường)
+        $scope = $request->query('scope', 'all');
+
+        // XỬ LÝ TAB "ĐANG THEO DÕI"
+        if ($scope === 'following') {
+            // Lấy danh sách ID của những người mà User hiện tại đang follow
+            $followingIds = DB::table('follows')
+                ->where('follower_id', $currentUserId)
+                ->pluck('following_id');
+
+            $posts = Post::with(['user', 'category', 'attachments'])
+                ->withTrashed() // Lấy cả bài viết có deleted_at để khớp với DB test hiện tại của Thư
+                ->whereIn('status', ['Accepted', 'accepted']) // Chấp nhận cả chữ A hoa lẫn chữ a thường
+                ->whereIn('user_id', $followingIds)
+                ->latest() // Sắp xếp theo thời gian mới nhất lên đầu
+                ->paginate($perPage);
+        }
+        // XỬ LÝ TAB "KHÁM PHÁ" MẶC ĐỊNH
+        else {
+            $posts = Post::with(['user', 'category', 'attachments'])
+                ->withTrashed() // Lấy cả bài viết có deleted_at để khớp với DB test hiện tại của Thư
+                ->whereIn('status', ['Accepted', 'accepted'])
+                ->latest() // Sắp xếp theo thời gian mới nhất lên đầu
+                ->paginate($perPage);
+        }
+    }
+    // Hàm tiện ích để đính kèm lượt Like, Share và Trạng thái Liked vào dữ liệu trả về
+    private function attachPostStats($posts, $userId)
+    {
+        $isSingle = $posts instanceof Post;
+        $collection = $isSingle ? collect([$posts]) : $posts;
+
+        if ($collection->isEmpty()) return $posts;
+
+        $postIds = $collection->pluck('id')->toArray();
+
+        // Đếm tổng lượt like
+        $likesCounts = Like::whereIn('post_id', $postIds)
+            ->select('post_id', DB::raw('count(*) as count'))
+            ->groupBy('post_id')
+            ->pluck('count', 'post_id');
+
+        // Check xem user đang login đã like các bài nào
+        $userLikes = Like::whereIn('post_id', $postIds)
+            ->where('user_id', $userId)
+            ->pluck('post_id')
+            ->toArray();
+
+        // Đếm số lượt share
+        $sharesCounts = Post::whereIn('parent_post_id', $postIds)
+            ->select('parent_post_id', DB::raw('count(*) as count'))
+            ->groupBy('parent_post_id')
+            ->pluck('count', 'parent_post_id');
+
+        foreach ($collection as $post) {
+            $post->setAttribute('likes', $likesCounts[$post->id] ?? 0);
+            $post->setAttribute('liked', in_array($post->id, $userLikes));
+            $post->setAttribute('shares', $sharesCounts[$post->id] ?? 0);
+
+            // Đảm bảo parentPost được đính kèm vào JSON trả về
+            if ($post->relationLoaded('parentPost') && $post->parentPost) {
+                $post->setAttribute('shared_post', $post->parentPost);
+            }
+        }
+
+        return $posts;
+    }
+
     // GET /api/posts - Xem danh sách bài viết trên bảng tin
     public function getList(GetListPostRequest $request): PostCollection
     {
         $perPage = $request->integer('per_page', 15);
-        $posts = Post::whereNull('deleted_at');
         $posts = $this->postRepository->getFeed($perPage);
+
+        // Load dữ liệu bài viết gốc để frontend có thể hiển thị Share UI
+        if ($posts instanceof \Illuminate\Pagination\AbstractPaginator) {
+            $posts->getCollection()->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
+        } else {
+            $posts->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
+        }
+
+        $this->attachPostStats($posts, $request->attributes->get('user_id'));
 
         return new PostCollection($posts);
     }
@@ -46,6 +129,14 @@ class PostController extends Controller
         $perPage = $request->integer('per_page', 15);
 
         $posts = $this->postRepository->adminSearch($filters, $perPage);
+
+        if ($posts instanceof \Illuminate\Pagination\AbstractPaginator) {
+            $posts->getCollection()->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
+        } else {
+            $posts->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
+        }
+
+        $this->attachPostStats($posts, $request->attributes->get('user_id'));
 
         return new PostCollection($posts);
     }
@@ -79,6 +170,7 @@ class PostController extends Controller
             DB::commit();
 
             $post->load('user', 'category', 'attachments');
+            $this->attachPostStats($post, $request->attributes->get('user_id'));
 
             return response()->json([
                 'status'  => true,
@@ -136,6 +228,7 @@ class PostController extends Controller
             DB::commit();
 
             $updated->load('user', 'category', 'attachments');
+            $this->attachPostStats($updated, $request->attributes->get('user_id'));
 
             return response()->json([
                 'status'  => true,
@@ -182,7 +275,7 @@ class PostController extends Controller
         $perPage = $request->integer('per_page', 15);
         $currentUserId = $request->attributes->get('user_id');
 
-        $query = Post::with(['user', 'category', 'attachments'])
+        $query = Post::with(['user', 'category', 'attachments', 'parentPost.user', 'parentPost.attachments', 'parentPost.category'])
             ->where('user_id', $id);
 
         // Chỉ chủ sở hữu bài viết mới xem được bài viết private hoặc pending
@@ -192,7 +285,82 @@ class PostController extends Controller
         }
 
         $posts = $query->latest()->paginate($perPage);
+        $this->attachPostStats($posts, $currentUserId);
 
         return new PostCollection($posts);
+    }
+
+    // POST /api/posts/{id}/like - Toggle Like bài viết
+    public function toggleLike(int $id, \Illuminate\Http\Request $request): JsonResponse
+    {
+        $userId = $request->attributes->get('user_id');
+        $post = $this->postRepository->findById($id);
+
+        if (!$post) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Không tìm thấy bài viết',
+            ], 404);
+        }
+
+        $existingLike = Like::where('user_id', $userId)
+            ->where('post_id', $id)
+            ->first();
+
+        if ($existingLike) {
+            $existingLike->delete();
+            $liked = false;
+        } else {
+            Like::create([
+                'user_id' => $userId,
+                'post_id' => $id,
+            ]);
+            $liked = true;
+        }
+
+        $likesCount = Like::where('post_id', $id)->count();
+
+        return response()->json([
+            'status'  => true,
+            'message' => $liked ? 'Đã thích bài viết' : 'Đã bỏ thích',
+            'data'    => [
+                'liked' => $liked,
+                'likes' => $likesCount,
+            ],
+        ]);
+    }
+
+    // POST /api/posts/{id}/share - Share bài viết
+    public function share(int $id, \Illuminate\Http\Request $request): JsonResponse
+    {
+        $userId = $request->attributes->get('user_id');
+        $post = $this->postRepository->findById($id);
+
+        if (!$post) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Không tìm thấy bài viết',
+            ], 404);
+        }
+
+        // Tạo một bài viết mới (share) trỏ đến parent_post_id
+        $newPost = $this->postRepository->create([
+            'user_id'        => $userId,
+            'parent_post_id' => $id,
+            'category_id'    => $post->category_id,
+            'content'        => $request->content, // Không copy nội dung cũ để tránh bị lặp lại ở khung Share
+            'visibility'     => Post::VISIBILITY_PUBLIC,
+            'status'         => Post::STATUS_ACCEPTED, // Share mặc định duyệt luôn
+        ]);
+
+        $sharesCount = Post::where('parent_post_id', $id)->count();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Đã chia sẻ bài viết',
+            'data'    => [
+                'shares' => $sharesCount,
+            ],
+        ]);
     }
 }
