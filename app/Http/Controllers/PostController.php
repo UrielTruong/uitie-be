@@ -287,12 +287,12 @@ class PostController extends Controller
         $currentUserId = $request->attributes->get('user_id');
 
         $query = Post::with(['user', 'category', 'attachments', 'parentPost.user', 'parentPost.attachments', 'parentPost.category'])
-            ->where('user_id', $id)
-            ->where('status', Post::STATUS_ACCEPTED);
+            ->where('user_id', $id);
 
         // Chỉ chủ sở hữu bài viết mới xem được bài viết private hoặc pending
         if ((string) $id !== (string) $currentUserId) {
-            $query->where('visibility', Post::VISIBILITY_PUBLIC);
+            $query->where('visibility', Post::VISIBILITY_PUBLIC)
+                ->where('status', Post::STATUS_ACCEPTED);
         }
 
         $posts = $query->latest()->paginate($perPage);
@@ -370,7 +370,7 @@ class PostController extends Controller
             'category_id'    => $post->category_id,
             'content'        => $content,
             'visibility'     => Post::VISIBILITY_PUBLIC,
-            'status'         => Post::STATUS_PENDING, // Changed: shares should go through moderation too
+            'status'         => Post::STATUS_ACCEPTED,
         ]);
 
         $sharesCount = Post::where('parent_post_id', $id)->count();

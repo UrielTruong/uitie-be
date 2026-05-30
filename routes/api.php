@@ -97,6 +97,8 @@ Route::middleware('auth.jwt')->group(function () {
 
         // Báo cáo bài viết (Đã cập nhật theo Controller mới)
         Route::post('/{id}/report', [ReportController::class, 'reportPost']);
+        Route::post('/{id}/like', [PostController::class, 'toggleLike']);
+        Route::post('/{id}/share', [PostController::class, 'share']);
     });
 
     //route for COMMENT
