@@ -50,6 +50,11 @@ class Post extends Model
         return $this->belongsTo(Post::class, 'parent_post_id');
     }
 
+    public function parentPost(): BelongsTo
+    {
+        return $this->belongsTo(Post::class, 'parent_post_id');
+    }
+
     public function children(): HasMany
     {
         return $this->hasMany(Post::class, 'parent_post_id');
