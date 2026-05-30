@@ -47,7 +47,6 @@ class PostRepository implements PostRepositoryInterface
         $query = Post::with(['user', 'category', 'attachments']);
 
         // Không có where visibility/status — admin thấy tất cả bài kể cả Private, Pending, Rejected
-
         if (!empty($filters['keyword'])) {
             $query->where('content', 'like', "%{$filters['keyword']}%");
         }
@@ -69,12 +68,14 @@ class PostRepository implements PostRepositoryInterface
             $query->where('user_id', $filters['user_id']);
         }
 
+        // TỐI ƯU THỜI GIAN: Lọc từ ngày (from_date) về đầu ngày 00:00:00
         if (!empty($filters['from_date'])) {
-            $query->whereDate('created_at', '>=', $filters['from_date']);
+            $query->whereDate('created_at', '>=', \Carbon\Carbon::parse($filters['from_date'])->startOfDay());
         }
 
+        // TỐI ƯU THỜI GIAN: Lọc đến ngày (to_date) về cuối ngày 23:59:59
         if (!empty($filters['to_date'])) {
-            $query->whereDate('created_at', '<=', $filters['to_date']);
+            $query->whereDate('created_at', '<=', \Carbon\Carbon::parse($filters['to_date'])->endOfDay());
         }
 
         return $query->latest()->paginate($perPage);
