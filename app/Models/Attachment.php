@@ -29,6 +29,6 @@ class Attachment extends Model
 
     public function comments(): BelongsToMany
     {
-        return $this->belongsToMany(Comment::class, 'comment_attachments');
+        return $this->belongsToMany(Comment::class, 'comment_attachments')->withTimestamps();
     }
 }
