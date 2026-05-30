@@ -30,38 +30,52 @@ class PostController extends Controller
         private AttachmentService $attachmentService,
     ) {}
 
-    // GET /api/posts - Xem danh sách bài viết trên bảng tin (Khám phá / Đang theo dõi + Lọc thời gian)
+    // GET /api/posts - Xem danh sách bài viết trên bảng tin (Khám phá / Đang theo dõi)
     public function getList(GetListPostRequest $request): PostCollection
     {
         $perPage = $request->integer('per_page', 15);
-        $currentUserId = $request->attributes->get('user_id') ?? 1;
+        $currentUserId = $request->attributes->get('user_id');
 
-        // Lấy scope từ query params (Mặc định là 'all' - Khám phá toàn trường)
+        // Verify user is authenticated - should be handled by middleware
+        if (!$currentUserId) {
+            abort(401, 'Unauthorized: user_id not found');
+        }
+
+        // Get scope from query params (default: 'all' for Explore tab)
         $scope = $request->query('scope', 'all');
 
-        // XỬ LÝ TAB "ĐANG THEO DÕI"
+        // HANDLE "FOLLOWING" TAB - Get posts only from users that current user follows
         if ($scope === 'following') {
-            // Lấy danh sách ID của những người mà User hiện tại đang follow
             $followingIds = DB::table('follows')
                 ->where('follower_id', $currentUserId)
                 ->pluck('following_id');
 
             $posts = Post::with(['user', 'category', 'attachments'])
-                ->withTrashed() // Lấy cả bài viết có deleted_at để khớp với DB test hiện tại của Thư
-                ->whereIn('status', ['Accepted', 'accepted']) // Chấp nhận cả chữ A hoa lẫn chữ a thường
                 ->whereIn('user_id', $followingIds)
-                ->latest() // Sắp xếp theo thời gian mới nhất lên đầu
+                ->where('status', Post::STATUS_ACCEPTED)
+                ->latest()
                 ->paginate($perPage);
         }
-        // XỬ LÝ TAB "KHÁM PHÁ" MẶC ĐỊNH
+        // HANDLE "EXPLORE" TAB (DEFAULT) - Get all accepted posts
         else {
             $posts = Post::with(['user', 'category', 'attachments'])
-                ->withTrashed() // Lấy cả bài viết có deleted_at để khớp với DB test hiện tại của Thư
-                ->whereIn('status', ['Accepted', 'accepted'])
-                ->latest() // Sắp xếp theo thời gian mới nhất lên đầu
+                ->where('status', Post::STATUS_ACCEPTED)
+                ->latest()
                 ->paginate($perPage);
         }
+
+        // Load parent post data for Share UI
+        if ($posts instanceof \Illuminate\Pagination\AbstractPaginator) {
+            $posts->getCollection()->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
+        } else {
+            $posts->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
+        }
+
+        $this->attachPostStats($posts, $currentUserId);
+
+        return new PostCollection($posts);
     }
+
     // Hàm tiện ích để đính kèm lượt Like, Share và Trạng thái Liked vào dữ liệu trả về
     private function attachPostStats($posts, $userId)
     {
@@ -104,29 +118,12 @@ class PostController extends Controller
         return $posts;
     }
 
-    // GET /api/posts - Xem danh sách bài viết trên bảng tin
-    public function getList(GetListPostRequest $request): PostCollection
-    {
-        $perPage = $request->integer('per_page', 15);
-        $posts = $this->postRepository->getFeed($perPage);
-
-        // Load dữ liệu bài viết gốc để frontend có thể hiển thị Share UI
-        if ($posts instanceof \Illuminate\Pagination\AbstractPaginator) {
-            $posts->getCollection()->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
-        } else {
-            $posts->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
-        }
-
-        $this->attachPostStats($posts, $request->attributes->get('user_id'));
-
-        return new PostCollection($posts);
-    }
-
     // GET /api/posts/search - tìm kiếm bài viết
     public function search(SearchPostRequest $request): PostCollection
     {
         $filters = $request->only(['keyword', 'category_id']);
         $perPage = $request->integer('per_page', 15);
+        $currentUserId = $request->attributes->get('user_id');
 
         $posts = $this->postRepository->adminSearch($filters, $perPage);
 
@@ -136,7 +133,7 @@ class PostController extends Controller
             $posts->loadMissing(['parentPost.user', 'parentPost.attachments', 'parentPost.category']);
         }
 
-        $this->attachPostStats($posts, $request->attributes->get('user_id'));
+        $this->attachPostStats($posts, $currentUserId);
 
         return new PostCollection($posts);
     }
@@ -191,6 +188,13 @@ class PostController extends Controller
     public function update(UpdatePostRequest $request, int $id): JsonResponse
     {
         $post = $this->postRepository->findById($id);
+
+        if (!$post) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Post not found',
+            ], 404);
+        }
 
         if ((string) $post->user_id !== (string) $request->attributes->get('user_id')) {
             return response()->json([
@@ -250,6 +254,13 @@ class PostController extends Controller
     {
         $post = $this->postRepository->findById($id);
 
+        if (!$post) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Post not found',
+            ], 404);
+        }
+
         // Chỉ người tạo hoặc Admin mới được xóa
         $isOwner = (string) $post->user_id === (string) $request->attributes->get('user_id');
         $isAdmin = in_array($request->attributes->get('user_role'), ['Admin', 'Super Admin']);
@@ -276,12 +287,12 @@ class PostController extends Controller
         $currentUserId = $request->attributes->get('user_id');
 
         $query = Post::with(['user', 'category', 'attachments', 'parentPost.user', 'parentPost.attachments', 'parentPost.category'])
-            ->where('user_id', $id);
+            ->where('user_id', $id)
+            ->where('status', Post::STATUS_ACCEPTED);
 
         // Chỉ chủ sở hữu bài viết mới xem được bài viết private hoặc pending
         if ((string) $id !== (string) $currentUserId) {
-            $query->where('visibility', Post::VISIBILITY_PUBLIC)
-                ->where('status', Post::STATUS_ACCEPTED);
+            $query->where('visibility', Post::VISIBILITY_PUBLIC);
         }
 
         $posts = $query->latest()->paginate($perPage);
@@ -299,30 +310,30 @@ class PostController extends Controller
         if (!$post) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Không tìm thấy bài viết',
+                'message' => 'Post not found',
             ], 404);
         }
 
-        $existingLike = Like::where('user_id', $userId)
-            ->where('post_id', $id)
-            ->first();
+        // Use firstOrCreate to prevent race condition
+        $like = Like::firstOrCreate(
+            ['user_id' => $userId, 'post_id' => $id],
+            ['user_id' => $userId, 'post_id' => $id]
+        );
 
-        if ($existingLike) {
-            $existingLike->delete();
-            $liked = false;
-        } else {
-            Like::create([
-                'user_id' => $userId,
-                'post_id' => $id,
-            ]);
+        if ($like->wasRecentlyCreated) {
+            // Like was just created
             $liked = true;
+        } else {
+            // Like already existed, so delete it
+            $like->delete();
+            $liked = false;
         }
 
         $likesCount = Like::where('post_id', $id)->count();
 
         return response()->json([
             'status'  => true,
-            'message' => $liked ? 'Đã thích bài viết' : 'Đã bỏ thích',
+            'message' => $liked ? 'Liked post' : 'Unliked post',
             'data'    => [
                 'liked' => $liked,
                 'likes' => $likesCount,
@@ -339,8 +350,17 @@ class PostController extends Controller
         if (!$post) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Không tìm thấy bài viết',
+                'message' => 'Post not found',
             ], 404);
+        }
+
+        // Validate content is provided and is a string
+        $content = $request->input('content', '');
+        if (!is_string($content)) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Content must be a string',
+            ], 422);
         }
 
         // Tạo một bài viết mới (share) trỏ đến parent_post_id
@@ -348,16 +368,16 @@ class PostController extends Controller
             'user_id'        => $userId,
             'parent_post_id' => $id,
             'category_id'    => $post->category_id,
-            'content'        => $request->content, // Không copy nội dung cũ để tránh bị lặp lại ở khung Share
+            'content'        => $content,
             'visibility'     => Post::VISIBILITY_PUBLIC,
-            'status'         => Post::STATUS_ACCEPTED, // Share mặc định duyệt luôn
+            'status'         => Post::STATUS_PENDING, // Changed: shares should go through moderation too
         ]);
 
         $sharesCount = Post::where('parent_post_id', $id)->count();
 
         return response()->json([
             'status'  => true,
-            'message' => 'Đã chia sẻ bài viết',
+            'message' => 'Post shared successfully',
             'data'    => [
                 'shares' => $sharesCount,
             ],
