@@ -88,7 +88,6 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('/', [PostController::class, 'create']);
         Route::put('/{id}', [PostController::class, 'update']);
         Route::delete('/{id}', [PostController::class, 'destroy']);
-
         // Báo cáo bài viết (Đã cập nhật theo Controller mới)
         Route::post('/{id}/report', [ReportController::class, 'reportPost']);
     });
