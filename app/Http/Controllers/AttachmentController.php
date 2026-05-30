@@ -13,8 +13,9 @@ class AttachmentController extends Controller
 
     public function presign(PresignAttachmentRequest $request): JsonResponse
     {
+        $folder  = $request->input('folder', 'posts');
         $results = collect($request->files_meta)->map(
-            fn($file) => $this->attachmentService->generatePresignedUrl($file['name'], $file['mime'])
+            fn($file) => $this->attachmentService->generatePresignedUrl($file['name'], $file['mime'], $folder)
         );
 
         return response()->json([

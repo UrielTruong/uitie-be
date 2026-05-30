@@ -4,8 +4,10 @@ use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\StatisticController as AdminStatisticController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\FollowSuggestionController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\GroupChatController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\CommentController;
@@ -114,5 +116,27 @@ Route::middleware('auth.jwt')->group(function () {
     //route for ATTACHMENT
     Route::prefix('attachment')->group(function () {
         Route::post('/presign', [AttachmentController::class, 'presign']);
+    });
+
+    //route for DM CONVERSATIONS
+    Route::prefix('conversations')->group(function () {
+        Route::get('/', [ConversationController::class, 'index']);
+        Route::get('/{userId}/messages', [ConversationController::class, 'messages']);
+        Route::post('/{userId}/messages', [ConversationController::class, 'send']);
+    });
+
+    //route for GROUP CHATS
+    Route::prefix('groups')->group(function () {
+        Route::get('/', [GroupChatController::class, 'index']);
+        Route::post('/', [GroupChatController::class, 'store']);
+        Route::get('/{id}', [GroupChatController::class, 'show']);
+        Route::delete('/{id}', [GroupChatController::class, 'destroy']);
+        Route::get('/{id}/messages', [GroupChatController::class, 'messages']);
+        Route::post('/{id}/messages', [GroupChatController::class, 'sendMessage']);
+        Route::post('/{id}/members', [GroupChatController::class, 'invite']);
+        Route::delete('/{id}/members/{userId}', [GroupChatController::class, 'removeMember']);
+        Route::post('/{id}/join', [GroupChatController::class, 'join']);
+        Route::post('/{id}/reject', [GroupChatController::class, 'reject']);
+        Route::delete('/{id}/leave', [GroupChatController::class, 'leave']);
     });
 });

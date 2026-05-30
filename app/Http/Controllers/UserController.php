@@ -182,6 +182,6 @@ class UserController extends Controller
             ], 404);
         }
 
-        return response()->json($user, 200);
+        return response()->json(['status' => true, 'data' => $user], 200);
     }
 }
