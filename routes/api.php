@@ -65,10 +65,10 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('change-password', [UserController::class, 'changePassword']);
         //search user
         Route::get('/search', [UserController::class, 'search']);
-        
+
         // Route báo cáo người dùng 
         Route::post('/{id}/report', [ReportController::class, 'reportUser']);
-        
+
         // Lấy thông tin profile của chính mình và người khác trong UserController
         Route::get('profile', [UserController::class, 'profile']);
         Route::get('/{id}', [UserController::class, 'show']);
@@ -88,7 +88,6 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('/', [PostController::class, 'create']);
         Route::put('/{id}', [PostController::class, 'update']);
         Route::delete('/{id}', [PostController::class, 'destroy']);
-        
         // Báo cáo bài viết (Đã cập nhật theo Controller mới)
         Route::post('/{id}/report', [ReportController::class, 'reportPost']);
     });
