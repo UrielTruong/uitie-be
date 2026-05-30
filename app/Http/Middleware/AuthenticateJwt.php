@@ -2,9 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Services\JwtService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthenticateJwt
@@ -30,6 +32,17 @@ class AuthenticateJwt
             // Attach user id to request for use in controllers
             $request->attributes->set('user_id', $payload->sub);
             $request->attributes->set('user_role', $payload->role);
+
+            // Allow Auth::user() to work for this request (needed for Reverb channel auth).
+            // loginUsingOnce requires SessionGuard (web), which is not available on stateless API routes,
+            // so we fall back to setUser() which works on any guard without session.
+            if ($user = User::find($payload->sub)) {
+                try {
+                    Auth::guard('web')->loginUsingOnce($user);
+                } catch (\BadMethodCallException) {
+                    Auth::setUser($user);
+                }
+            }
         } catch (\Firebase\JWT\ExpiredException $e) {
             return response()->json([
                 'status'  => false,
