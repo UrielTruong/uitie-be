@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\SearchUserRequest;
+use App\Models\Follow;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -152,8 +153,7 @@ class UserController extends Controller
         // Lấy userId từ attribute do middleware JWT bọc sẵn giống hàm changePassword
         $userId = $request->attributes->get('user_id');
         
-        // Tận dụng Repository $this->users của anh Trí để tìm user trong DB
-        $user = $this->users->findById($userId);
+        $user = User::withCount(['followers', 'following'])->find($userId);
 
         if (! $user) {
             return response()->json([
@@ -170,10 +170,11 @@ class UserController extends Controller
      * Lấy thông tin chi tiết của một user khác dựa trên ID truyền qua URL
      * GET /api/user/{id}
      */
-    public function show(string|int $id): JsonResponse
+    public function show(Request $request, string|int $id): JsonResponse
     {
-        // Dùng Repository tìm kiếm user theo ID
-        $user = $this->users->findById($id);
+        $currentUserId = $request->attributes->get('user_id');
+
+        $user = User::withCount(['followers', 'following'])->find($id);
 
         if (! $user) {
             return response()->json([
@@ -181,6 +182,11 @@ class UserController extends Controller
                 'message' => 'User not found',
             ], 404);
         }
+
+        $user->setAttribute(
+            'is_following',
+            Follow::where('follower_id', $currentUserId)->where('following_id', $id)->exists()
+        );
 
         return response()->json(['status' => true, 'data' => $user], 200);
     }
