@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\StatisticController as AdminStatisticController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\FollowController;
 use App\Http\Controllers\FollowSuggestionController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\GroupChatController;
@@ -87,6 +88,10 @@ Route::middleware('auth.jwt')->group(function () {
 
     // Gợi ý follow
     Route::get('/users/suggested-follows', [FollowSuggestionController::class, 'getSuggestedFollows']);
+
+    // Follow / Unfollow
+    Route::post('/users/{id}/follow', [FollowController::class, 'follow']);
+    Route::delete('/users/{id}/follow', [FollowController::class, 'unfollow']);
 
 
     //route for POST - FEED
