@@ -76,12 +76,11 @@ Route::middleware('auth.jwt')->group(function () {
 
         // Lấy thông tin profile của chính mình và người khác trong UserController
         Route::get('profile', [UserController::class, 'profile']);
+        Route::put('profile', [ProfileController::class, 'updateProfile']);
         Route::get('/{id}', [UserController::class, 'show']);
     });
 
-    // 
     Route::get('/profile', [ProfileController::class, 'getProfile']);
-    Route::put('/profile', [ProfileController::class, 'updateProfile']);
 
     // Lấy danh sách bài viết của một user cụ thể
     Route::get('/users/{id}/posts', [PostController::class, 'getUserPosts']);
